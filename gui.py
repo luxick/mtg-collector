@@ -7,7 +7,7 @@ from gi.repository import Gtk
 
 class MainWindow(Gtk.Window):
     def __init__(self):
-        Gtk.Window.__init__(self, title="MTG Collector v0.1")
+        Gtk.Window.__init__(self, title="MTG Collector (working title) v0.1")
         self.set_border_width(2)
         self.set_size_request(1000, 700)
 
