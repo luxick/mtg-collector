@@ -1,5 +1,6 @@
 import gi
 import collection
+import search
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
@@ -18,7 +19,7 @@ class MainWindow(Gtk.Window):
         self.collectionView.add(collection.CollectionView())
 
         self.searchView = Gtk.Box()
-        self.searchView.add(Gtk.Label("Search the whole Magic Card Library!"))
+        self.searchView.add(search.SearchView())
 
         self.deckView = Gtk.Box()
         self.deckView.add(Gtk.Label("View and organize your Decklists!"))
