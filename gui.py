@@ -24,9 +24,10 @@ class MainWindow(Gtk.Window):
         self.deckView = Gtk.Box()
         self.deckView.add(Gtk.Label("View and organize your Decklists!"))
 
+        self.notebook.append_page(self.searchView, Gtk.Label("Search"))
         self.notebook.append_page(self.collectionView, Gtk.Label("Collection"))
         self.notebook.append_page(self.deckView, Gtk.Label("Decks"))
-        self.notebook.append_page(self.searchView, Gtk.Label("Search"))
+
 
 
 win = MainWindow()

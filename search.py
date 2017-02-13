@@ -1,8 +1,10 @@
 import gi
+from gi.repository import Pango
 from psutil._compat import xrange
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf
+from mtgsdk import Card
 
 
 class SearchView(Gtk.Grid):
@@ -12,9 +14,12 @@ class SearchView(Gtk.Grid):
         # Search Box
         self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         self.searchEntry = Gtk.Entry()
+        self.searchbutton = Gtk.Button("Search Online")
+        self.searchbutton.connect("clicked", self.online_search_clicked)
         self.searchEntryLabel = Gtk.Label("Search for Cards:", xalign=0)
         self.searchbox.add(self.searchEntryLabel)
         self.searchbox.add(self.searchEntry)
+        self.searchbox.add(self.searchbutton)
 
         # Filters
         self.filterBox = Gtk.ListBox()
@@ -37,29 +42,43 @@ class SearchView(Gtk.Grid):
         self.searchresults.add(self.list)
 
         image = Gtk.CellRendererPixbuf()
-        name = Gtk.CellRendererText()
+
+        title = Gtk.CellRendererText(xalign=0.5)
+        title.set_padding = 2
+
         info = Gtk.CellRendererText()
+        info.set_property("wrap-mode", Pango.WrapMode.WORD)
+        info.set_property("wrap-width", 100)
+        info.set_padding = 2
+
         self.column1 = Gtk.TreeViewColumn(title="Image", cell_renderer=image, pixbuf=0)
-        self.column2 = Gtk.TreeViewColumn(title="Card Name", cell_renderer=name, text=1)
-        self.column3 = Gtk.TreeViewColumn(title="Additional Info", cell_renderer=info, text=2)
+        self.column2 = Gtk.TreeViewColumn(title="Card Name", cell_renderer=title, text=1)
+        self.column3 = Gtk.TreeViewColumn(title="Card Text", cell_renderer=info, text=2)
+        self.column3.set_max_width(100)
+
         self.column1.pack_start(image, True)
-        self.column2.pack_start(name, True)
+        self.column2.pack_start(title, True)
         self.column3.pack_start(info, True)
 
         self.list.append_column(self.column1)
         self.list.append_column(self.column2)
         self.list.append_column(self.column3)
 
-        self.fill_test_data(self.store)
-
         # Bring it all together
         self.attach(self.searchbox, 0, 0, 1, 1)
         self.attach(self.filterBox, 0, 1, 1, 1)
         self.attach(self.searchresults, 1, 0, 1, 2)
 
-    def fill_test_data(self, treestore):
-        for nr in xrange(0, 100):
-            treestore.append([self.add_test_image(), "Card Title", "More Info..."])
+    def online_search_clicked(self, button):
+        term = self.searchEntry.get_text()
+        print("Search for \"" + term + "\" online.")
+
+        cards = Card.where(name=term).all()
+        self.store.clear()
+        for card in cards:
+            self.store.append([self.add_test_image(), card.name, card.original_text])
+            print("Found: " + card.name)
+
 
     def add_test_image(self):
         return GdkPixbuf.Pixbuf.new_from_file_at_size('./resources/images/demo.jpg', 63*2, 88*2)
