@@ -1,7 +1,6 @@
 import gi
 from gi.repository import Pango
-from psutil._compat import xrange
-
+import util
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf
 from mtgsdk import Card
@@ -71,14 +70,19 @@ class SearchView(Gtk.Grid):
 
     def online_search_clicked(self, button):
         term = self.searchEntry.get_text()
-        print("Search for \"" + term + "\" online.")
+        if not term == "":
+            print("Search for \"" + term + "\" online.")
 
-        cards = Card.where(name=term).all()
-        self.store.clear()
-        for card in cards:
-            self.store.append([self.add_test_image(), card.name, card.original_text])
-            print("Found: " + card.name)
+            cards = Card.where(name=term).all()
+            self.store.clear()
+            for card in cards:
+                if card.multiverse_id is not None:
+                    print("Found ID: " + card.multiverse_id.__str__() + " | " + card.name)
+                    self.store.append([util.load_card_image(card),
+                                   card.name,
+                                   card.original_text])
+            util.reload_image_cache()
 
 
-    def add_test_image(self):
-        return GdkPixbuf.Pixbuf.new_from_file_at_size('./resources/images/demo.jpg', 63*2, 88*2)
+
+
