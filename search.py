@@ -36,7 +36,7 @@ class SearchView(Gtk.Grid):
         self.searchresults = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
         self.searchresults.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
-        self.store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str)
+        self.store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str)
         self.list = Gtk.TreeView(self.store)
         self.searchresults.add(self.list)
 
@@ -50,18 +50,23 @@ class SearchView(Gtk.Grid):
         info.set_property("wrap-width", 100)
         info.set_padding = 2
 
+        manacost = Gtk.CellRendererText()
+
         self.column1 = Gtk.TreeViewColumn(title="Image", cell_renderer=image, pixbuf=0)
         self.column2 = Gtk.TreeViewColumn(title="Card Name", cell_renderer=title, text=1)
         self.column3 = Gtk.TreeViewColumn(title="Card Text", cell_renderer=info, text=2)
+        self.column4 = Gtk.TreeViewColumn(title="Mana Cost", cell_renderer=manacost, text=3)
         self.column3.set_max_width(100)
 
         self.column1.pack_start(image, True)
         self.column2.pack_start(title, True)
         self.column3.pack_start(info, True)
+        self.column4.pack_start(manacost, True)
 
         self.list.append_column(self.column1)
         self.list.append_column(self.column2)
         self.list.append_column(self.column3)
+        self.list.append_column(self.column4)
 
         # Bring it all together
         self.attach(self.searchbox, 0, 0, 1, 1)
@@ -73,14 +78,17 @@ class SearchView(Gtk.Grid):
         if not term == "":
             print("Search for \"" + term + "\" online.")
 
-            cards = Card.where(name=term).all()
+            cards = Card.where(name=term).where(pageSize=50).where(page=1).all()
             self.store.clear()
             for card in cards:
                 if card.multiverse_id is not None:
-                    print("Found ID: " + card.multiverse_id.__str__() + " | " + card.name)
+                    print("Found: " + card.name
+                          + " (" + card.multiverse_id.__str__() + ")")
                     self.store.append([util.load_card_image(card),
-                                   card.name,
-                                   card.original_text])
+                                       card.name,
+                                       card.original_text,
+                                       card.mana_cost])
+
             util.reload_image_cache()
 
 

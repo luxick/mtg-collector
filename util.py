@@ -18,11 +18,10 @@ def reload_image_cache():
 
     # return array of images
     imageslist = os.listdir(config.cachepath)
-    loadedimages = []
+    imagecache.clear()
     for image in imageslist:
         img = PImage.open(config.cachepath + image)
-        loadedimages.append(img)
-    return loadedimages
+        imagecache.append(img)
 
 
 def add_test_image():
