@@ -1,10 +1,12 @@
 # mtg-collector
 A desktop application for building and organizing MTG card libraries and decks.
 
+## Features
+
+* Online card search
 
 ## Roadmap
 
-* Search for cards
 * Build collection of cards
 * Organize cards in collection
 * Build decklists from cards in collection

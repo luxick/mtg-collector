@@ -36,8 +36,8 @@ def reload_image_cache():
         imagecache.append(img)
 
 
-def add_test_image():
-    return GdkPixbuf.Pixbuf.new_from_file_at_size('./resources/images/demo.jpg', 63 * 2, 88 * 2)
+def add_test_image(sizex, sizey):
+    return GdkPixbuf.Pixbuf.new_from_file_at_size('./resources/images/demo.jpg', sizex, sizey)
 
 
 def load_card_image_online(card):
@@ -51,13 +51,13 @@ def load_card_image_online(card):
     return GdkPixbuf.Pixbuf.new_from_file_at_size(filename, 63 * 2, 88 * 2)
 
 
-def load_card_image(card):
+def load_card_image(card, sizex, sizey):
     # Try loading from disk, if file exists
     for image in imagecache:
         filename = os.path.basename(image.filename)
         if filename == card.multiverse_id.__str__() + ".PNG":
             print("Using local file for image: " + filename)
-            return GdkPixbuf.Pixbuf.new_from_file_at_size(image.filename, 63 * 2, 88 * 2)
+            return GdkPixbuf.Pixbuf.new_from_file_at_size(image.filename, sizex, sizey)
 
     # No file in local cache found
     return load_card_image_online(card)
@@ -65,7 +65,9 @@ def load_card_image(card):
 
 def create_mana_icons(mana_string):
     # Convert the string to a List
-    list = re.findall("\{(.*?)\}", mana_string)
+    list = re.findall("\{(.*?)\}", str(mana_string))
+    if len(list) == 0:
+        return
     # Compute horizontal size for the final image
     imagesize = len(list) * 105
     image = PImage.new("RGBA", (imagesize, 105))

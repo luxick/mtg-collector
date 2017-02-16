@@ -49,7 +49,7 @@ class CollectionView(Gtk.Grid):
         self.image_area.add(self.bigCard)
         self.detailBox.add(self.image_area)
 
-        # Stats and Details about the selected Card
+        # Sta-ts and Details about the selected Card
         self.stat_listbox = Gtk.ListBox()
         self.stat_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         self.test_statrow = Gtk.ListBoxRow()
