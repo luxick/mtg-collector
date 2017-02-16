@@ -13,6 +13,10 @@ class MainWindow(Gtk.Window):
         self.set_border_width(2)
         self.set_size_request(1000, 700)
 
+        # Load local image Data
+        util.reload_image_cache()
+        util.load_mana_icons()
+
         self.notebook = Gtk.Notebook()
         self.add(self.notebook)
 
@@ -29,13 +33,7 @@ class MainWindow(Gtk.Window):
         self.notebook.append_page(self.collectionView, Gtk.Label("Collection"))
         self.notebook.append_page(self.deckView, Gtk.Label("Decks"))
 
-
-
-
 win = MainWindow()
-# Load local image Data
-util.reload_image_cache()
-util.load_mana_icons()
 win.connect('delete-event', Gtk.main_quit)
 win.show_all()
 Gtk.main()

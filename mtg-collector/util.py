@@ -13,7 +13,7 @@ manaicons ={}
 
 
 def load_mana_icons():
-    path = "resources/mana_icons/"
+    path = os.path.dirname(__file__) + "/resources/mana_icons/"
     if not os.path.exists(path):
         print("ERROR: Directory for mana icons not found")
         return
@@ -37,7 +37,8 @@ def reload_image_cache():
 
 
 def add_test_image(sizex, sizey):
-    return GdkPixbuf.Pixbuf.new_from_file_at_size('./resources/images/demo.jpg', sizex, sizey)
+    return GdkPixbuf.Pixbuf.new_from_file_at_size(os.path.dirname(__file__) +
+                                                  '/resources/images/demo.jpg', sizex, sizey)
 
 
 def load_card_image_online(card):
@@ -45,7 +46,7 @@ def load_card_image_online(card):
     if url is None:
         print("No Image URL provided")
         return add_test_image()
-    filename = ".cache/" + card.multiverse_id.__str__() + ".PNG"
+    filename = config.cachepath + card.multiverse_id.__str__() + ".PNG"
     print("Loading image from: " + url)
     response = request.urlretrieve(url, filename)
     return GdkPixbuf.Pixbuf.new_from_file_at_size(filename, 63 * 2, 88 * 2)

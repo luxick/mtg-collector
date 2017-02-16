@@ -1,3 +1,5 @@
+import os
+
 import gi
 from psutil._compat import xrange
 
@@ -44,7 +46,7 @@ class CollectionView(Gtk.Grid):
         # Big Picture of the selected Card
         self.image_area = Gtk.Box()
         self.bigCard = Gtk.Image()
-        self.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size('./resources/images/demo.jpg', 63 * 4, 88 * 4)
+        self.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(os.path.dirname(__file__) + '/resources/images/demo.jpg', 63 * 4, 88 * 4)
         self.bigCard.set_from_pixbuf(self.pixbuf)
         self.image_area.add(self.bigCard)
         self.detailBox.add(self.image_area)
@@ -69,7 +71,7 @@ class CollectionView(Gtk.Grid):
 
     def add_test_image(self):
         image = Gtk.Image()
-        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size('./resources/images/demo.jpg', 63*2, 88*2)
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(os.path.dirname(__file__) + '/resources/images/demo.jpg', 63*2, 88*2)
         image.set_from_pixbuf(pixbuf)
 
         return image

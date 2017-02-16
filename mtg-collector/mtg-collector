@@ -1,0 +1,3 @@
+#! /usr/bin/env python
+import os
+os.s.path.dirname(__file__) + "/mtg-collector/gui.py"
