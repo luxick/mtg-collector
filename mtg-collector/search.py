@@ -10,14 +10,17 @@ from mtgsdk import Card
 class SearchView(Gtk.Grid):
     def __init__(self):
         Gtk.Grid.__init__(self)
+        self.set_column_spacing(5)
 
         # Search Box
-        self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5,
+                                 margin_end=5, margin_start=5, margin_top=5, margin_bottom=5)
         self.searchEntry = Gtk.Entry()
         self.searchEntry.connect("activate", self.online_search_clicked)
         self.searchbutton = Gtk.Button("Search Online")
         self.searchbutton.connect("clicked", self.online_search_clicked)
-        self.searchEntryLabel = Gtk.Label("Search for Cards:", xalign=0)
+        self.searchEntryLabel = Gtk.Label(xalign=0, yalign=0)
+        self.searchEntryLabel.set_markup("<big>Search for Cards:</big>")
         self.searchbox.add(self.searchEntryLabel)
         self.searchbox.add(self.searchEntry)
         self.searchbox.add(self.searchbutton)
@@ -46,12 +49,12 @@ class SearchView(Gtk.Grid):
         image = Gtk.CellRendererPixbuf()
 
         title = Gtk.CellRendererText(xalign=0.5)
-        title.set_padding = 2
+        title.set_padding(5, 5)
 
         info = Gtk.CellRendererText()
         info.set_property("wrap-mode", Pango.WrapMode.WORD)
         info.set_property("wrap-width", 100)
-        info.set_padding = 2
+        info.set_padding(5, 5)
 
         index = Gtk.CellRendererText()
         self.indexcolumn = Gtk.TreeViewColumn(title=index, cell_renderer=index, text=0)
@@ -73,17 +76,24 @@ class SearchView(Gtk.Grid):
         self.list.append_column(self.column4)
 
         # Detail View for selected Card
-        self.details = Gtk.Box()
-        self.details.add(details.DetailBar())
-
+        self.details = details.DetailBar()
         # Bring it all together
         self.attach(self.searchbox, 0, 0, 1, 1)
         self.attach(self.filterBox, 0, 1, 1, 1)
-        self.attach(self.searchresults, 1, 0, 1, 2)
-        self.attach(self.details, 2, 0, 1, 2)
+        self.attach(self.searchresults, 2, 0, 1, 2)
+        self.attach(self.details, 4, 0, 1, 2)
+
+        # Vertical Separators
+        self.attach(Gtk.VSeparator(), 1, 0, 1, 2)
+        self.attach(Gtk.VSeparator(), 3, 0, 1, 2)
+
+
 
         self.selection = self.list.get_selection()
         self.selection.connect("changed", self.on_card_selected)
+
+    def on_appering(self):
+        self.details.rulings.set_visible(False)
 
     def online_search_clicked(self, button):
         term = self.searchEntry.get_text()
@@ -115,8 +125,8 @@ class SearchView(Gtk.Grid):
             for card in self.cards:
                 if card.multiverse_id == card_id:
                     selected_card = card
-
-            print(selected_card.name + " selected \n")
+            if selected_card is not None:
+                self.details.set_card_detail(selected_card)
 
 
 

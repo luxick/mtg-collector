@@ -36,16 +36,14 @@ def reload_image_cache():
         imagecache.append(img)
 
 
-def add_test_image(sizex, sizey):
+def load_dummy_image(sizex, sizey):
     return GdkPixbuf.Pixbuf.new_from_file_at_size(os.path.dirname(__file__) +
-                                                  '/resources/images/demo.jpg', sizex, sizey)
-
-
+                                                  '/resources/images/dummy.jpg', sizex, sizey)
 def load_card_image_online(card):
     url = card.image_url
     if url is None:
         print("No Image URL provided")
-        return add_test_image()
+        return load_dummy_image()
     filename = config.cachepath + card.multiverse_id.__str__() + ".PNG"
     print("Loading image from: " + url)
     response = request.urlretrieve(url, filename)

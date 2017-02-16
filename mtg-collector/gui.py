@@ -33,6 +33,7 @@ class MainWindow(Gtk.Window):
         self.notebook.append_page(self.collectionView, Gtk.Label("Collection"))
         self.notebook.append_page(self.deckView, Gtk.Label("Decks"))
 
+
 win = MainWindow()
 win.connect('delete-event', Gtk.main_quit)
 win.show_all()
