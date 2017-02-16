@@ -35,6 +35,7 @@ class MainWindow(Gtk.Window):
 win = MainWindow()
 # Load local image Data
 util.reload_image_cache()
+util.load_mana_icons()
 win.connect('delete-event', Gtk.main_quit)
 win.show_all()
 Gtk.main()

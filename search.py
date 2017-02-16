@@ -36,7 +36,7 @@ class SearchView(Gtk.Grid):
         self.searchresults = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
         self.searchresults.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
-        self.store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, str)
+        self.store = Gtk.ListStore(GdkPixbuf.Pixbuf, str, str, GdkPixbuf.Pixbuf)
         self.list = Gtk.TreeView(self.store)
         self.searchresults.add(self.list)
 
@@ -50,18 +50,18 @@ class SearchView(Gtk.Grid):
         info.set_property("wrap-width", 100)
         info.set_padding = 2
 
-        manacost = Gtk.CellRendererText()
+        # manacost = Gtk.CellRendererText()
 
         self.column1 = Gtk.TreeViewColumn(title="Image", cell_renderer=image, pixbuf=0)
-        self.column2 = Gtk.TreeViewColumn(title="Card Name", cell_renderer=title, text=1)
+        self.column1.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+        self.column2 = Gtk.TreeViewColumn(title="Name", cell_renderer=title, text=1)
+        self.column2.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
         self.column3 = Gtk.TreeViewColumn(title="Card Text", cell_renderer=info, text=2)
-        self.column4 = Gtk.TreeViewColumn(title="Mana Cost", cell_renderer=manacost, text=3)
-        self.column3.set_max_width(100)
-
-        self.column1.pack_start(image, True)
-        self.column2.pack_start(title, True)
-        self.column3.pack_start(info, True)
-        self.column4.pack_start(manacost, True)
+        self.column3.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+        self.column3.set_resizable(True)
+        self.column3.set_expand(True)
+        self.column4 = Gtk.TreeViewColumn(title="Mana Cost", cell_renderer=image, pixbuf=3)
+        self.column4.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 
         self.list.append_column(self.column1)
         self.list.append_column(self.column2)
@@ -76,21 +76,24 @@ class SearchView(Gtk.Grid):
     def online_search_clicked(self, button):
         term = self.searchEntry.get_text()
         if not term == "":
-            print("Search for \"" + term + "\" online.")
+            print("Search for \"" + term + "\" online. \n")
 
             cards = Card.where(name=term).where(pageSize=50).where(page=1).all()
             self.store.clear()
             for card in cards:
                 if card.multiverse_id is not None:
                     print("Found: " + card.name
-                          + " (" + card.multiverse_id.__str__() + ")")
+                         + " (" + card.multiverse_id.__str__() + ")")
+
                     self.store.append([util.load_card_image(card),
                                        card.name,
                                        card.original_text,
-                                       card.mana_cost])
-
+                                       util.create_mana_icons(card.mana_cost)])
+                    print("\n")
             util.reload_image_cache()
 
+    def create_row_entry(self, card):
+        cardname = card.name
 
 
 
