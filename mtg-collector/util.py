@@ -39,7 +39,7 @@ def reload_image_cache():
 def load_dummy_image(sizex, sizey):
     return GdkPixbuf.Pixbuf.new_from_file_at_size(os.path.dirname(__file__) +
                                                   '/resources/images/dummy.jpg', sizex, sizey)
-def load_card_image_online(card):
+def load_card_image_online(card, sizex, sizey):
     url = card.image_url
     if url is None:
         print("No Image URL provided")
@@ -47,7 +47,7 @@ def load_card_image_online(card):
     filename = config.cachepath + card.multiverse_id.__str__() + ".PNG"
     print("Loading image from: " + url)
     response = request.urlretrieve(url, filename)
-    return GdkPixbuf.Pixbuf.new_from_file_at_size(filename, 63 * 2, 88 * 2)
+    return GdkPixbuf.Pixbuf.new_from_file_at_size(filename, sizex, sizey)
 
 
 def load_card_image(card, sizex, sizey):
@@ -59,7 +59,7 @@ def load_card_image(card, sizex, sizey):
             return GdkPixbuf.Pixbuf.new_from_file_at_size(image.filename, sizex, sizey)
 
     # No file in local cache found
-    return load_card_image_online(card)
+    return load_card_image_online(card, sizex, sizey)
 
 
 def create_mana_icons(mana_string):

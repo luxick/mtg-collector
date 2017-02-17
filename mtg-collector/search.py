@@ -2,15 +2,21 @@ import gi
 from gi.repository import Pango
 import util
 import details
+
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GdkPixbuf
+from gi.repository import Gtk, GdkPixbuf, GObject
 from mtgsdk import Card
+import threading
+
+GObject.threads_init()
 
 
 class SearchView(Gtk.Grid):
     def __init__(self):
         Gtk.Grid.__init__(self)
         self.set_column_spacing(5)
+
+        self.cancelSearch = False
 
         # Search Box
         self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5,
@@ -36,8 +42,7 @@ class SearchView(Gtk.Grid):
 
         self.filterBox.add(self.testRow)
 
-
-        #Card List
+        # Card List
         self.searchresults = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
         self.searchresults.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
@@ -87,8 +92,6 @@ class SearchView(Gtk.Grid):
         self.attach(Gtk.VSeparator(), 1, 0, 1, 2)
         self.attach(Gtk.VSeparator(), 3, 0, 1, 2)
 
-
-
         self.selection = self.list.get_selection()
         self.selection.connect("changed", self.on_card_selected)
 
@@ -96,16 +99,23 @@ class SearchView(Gtk.Grid):
         self.details.rulings.set_visible(False)
 
     def online_search_clicked(self, button):
+        self.store.clear()
+        self.searchEntry.set_editable(False)
+        self.searchbutton.set_sensitive(False)
+
+        threading.Thread(target=self.load_cards).start()
+
+    def load_cards(self):
+
         term = self.searchEntry.get_text()
         if not term == "":
             print("Search for \"" + term + "\" online. \n")
 
             self.cards = Card.where(name=term).where(pageSize=50).where(page=1).all()
-            self.store.clear()
             for card in self.cards:
                 if card.multiverse_id is not None:
                     print("Found: " + card.name
-                         + " (" + card.multiverse_id.__str__() + ")")
+                          + " (" + card.multiverse_id.__str__() + ")")
 
                     self.store.append([card.multiverse_id,
                                        util.load_card_image(card, 63 * 2, 88 * 2),
@@ -114,6 +124,8 @@ class SearchView(Gtk.Grid):
                                        util.create_mana_icons(card.mana_cost)])
                     print("\n")
             util.reload_image_cache()
+        self.searchEntry.set_editable(True)
+        self.searchbutton.set_sensitive(True)
 
     def on_card_selected(self, selection):
         (model, pathlist) = selection.get_selected_rows()
@@ -127,7 +139,3 @@ class SearchView(Gtk.Grid):
                     selected_card = card
             if selected_card is not None:
                 self.details.set_card_detail(selected_card)
-
-
-
-
