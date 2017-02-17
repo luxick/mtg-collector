@@ -2,6 +2,7 @@ import gi
 from gi.repository import Pango
 import util
 import details
+import config
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, GObject
@@ -30,14 +31,15 @@ class SearchView(Gtk.Grid):
         self.searchbox.add(self.searchEntryLabel)
         self.searchbox.add(self.searchEntry)
         self.searchbox.add(self.searchbutton)
+        self.searchbox.add(Gtk.HSeparator())
 
         # Filters
         self.filterBox = Gtk.ListBox()
         self.filterBox.set_selection_mode(Gtk.SelectionMode.NONE)
 
         self.testRow = Gtk.ListBoxRow()
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
-        hbox.add(Gtk.Label("Filters will go here", xalign=0))
+        hbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=50)
+        hbox.add(Gtk.Label("Filters will go here", xalign=0.5, yalign=0.5))
         self.testRow.add(hbox)
 
         self.filterBox.add(self.testRow)
@@ -112,6 +114,25 @@ class SearchView(Gtk.Grid):
             print("Search for \"" + term + "\" online. \n")
 
             self.cards = Card.where(name=term).where(pageSize=50).where(page=1).all()
+
+            # Remove duplicate entries
+            if config.show_from_all_sets is False:
+                counter = 0
+                unique_cards = []
+                unique_names = []
+                # Reverse cardlist so we get the version with the most modern art
+                for card in reversed(self.cards):
+                    if card.name not in unique_names:
+                        unique_names.append(card.name)
+                        unique_cards.append(card)
+                    else:
+                        counter += 1
+                self.cards.clear()
+                for unique_card in reversed(unique_cards):
+                    self.cards.append(unique_card)
+
+                print("Removed " + str(counter) + " duplicate entries")
+
             for card in self.cards:
                 if card.multiverse_id is not None:
                     print("Found: " + card.name
