@@ -17,8 +17,6 @@ class SearchView(Gtk.Grid):
         Gtk.Grid.__init__(self)
         self.set_column_spacing(5)
 
-        self.cancelSearch = False
-
         # Search Box
         self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5,
                                  margin_end=5, margin_start=5, margin_top=5, margin_bottom=5)
@@ -34,15 +32,38 @@ class SearchView(Gtk.Grid):
         self.searchbox.add(Gtk.HSeparator())
 
         # Filters
-        self.filterBox = Gtk.ListBox()
-        self.filterBox.set_selection_mode(Gtk.SelectionMode.NONE)
+        self.mana_filter_label = Gtk.Label("Mana Color", xalign=0, yalign=0)
+        self.red_mana_button = Gtk.ToggleButton(name="R", active=True)
+        self.red_mana_button.connect("toggled", self.mana_toggled)
+        self.blue_mana_button = Gtk.ToggleButton(name="U", active=True)
+        self.blue_mana_button.connect("toggled", self.mana_toggled)
+        self.green_mana_button = Gtk.ToggleButton(name="G", active=True)
+        self.green_mana_button.connect("toggled", self.mana_toggled)
+        self.black_mana_button = Gtk.ToggleButton(name="B", active=True)
+        self.black_mana_button.connect("toggled", self.mana_toggled)
+        self.white_mana_button = Gtk.ToggleButton(name="W", active=True)
+        self.white_mana_button.connect("toggled", self.mana_toggled)
+        self.colorless_mana_button = Gtk.ToggleButton(name="C", active=True)
+        self.colorless_mana_button.connect("toggled", self.mana_toggled)
+        # Set all Buttons active
+        self.init_mana_buttons()
 
-        self.testRow = Gtk.ListBoxRow()
-        hbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=50)
-        hbox.add(Gtk.Label("Filters will go here", xalign=0.5, yalign=0.5))
-        self.testRow.add(hbox)
+        self.color_chooser = Gtk.Grid(row_spacing=5, column_spacing=5)
+        self.color_chooser.attach(self.mana_filter_label, 0, 0, 5, 1)
+        self.color_chooser.attach(self.white_mana_button, 0, 1, 1, 1)
+        self.color_chooser.attach(self.blue_mana_button, 1, 1, 1, 1)
+        self.color_chooser.attach(self.black_mana_button, 2, 1, 1, 1)
+        self.color_chooser.attach(self.red_mana_button, 0, 2, 1, 1)
+        self.color_chooser.attach(self.green_mana_button, 1, 2, 1, 1)
+        self.color_chooser.attach(self.colorless_mana_button, 2, 2, 1, 1)
 
-        self.filterBox.add(self.testRow)
+        self.filters_title = Gtk.Label(xalign=0, yalign=0)
+        self.filters_title.set_markup("<big>Filter search results</big>")
+
+        self.filters = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5,
+                               margin_end=5, margin_start=5, margin_top=5, margin_bottom=5)
+        self.filters.add(self.filters_title)
+        self.filters.add(self.color_chooser)
 
         # Card List
         self.searchresults = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
@@ -86,7 +107,7 @@ class SearchView(Gtk.Grid):
         self.details = details.DetailBar()
         # Bring it all together
         self.attach(self.searchbox, 0, 0, 1, 1)
-        self.attach(self.filterBox, 0, 1, 1, 1)
+        self.attach(self.filters, 0, 1, 1, 1)
         self.attach(self.searchresults, 2, 0, 1, 2)
         self.attach(self.details, 4, 0, 1, 2)
 
@@ -108,43 +129,48 @@ class SearchView(Gtk.Grid):
         threading.Thread(target=self.load_cards).start()
 
     def load_cards(self):
-
         term = self.searchEntry.get_text()
-        if not term == "":
-            print("Search for \"" + term + "\" online. \n")
+        print("Search for \"" + term + "\" online.")
+        colorlist = self.get_color_filter()
+        print("Filtering color(s): " + ','.join(colorlist) + "\n")
 
-            self.cards = Card.where(name=term).where(pageSize=50).where(page=1).all()
+        # Load card info from internet
+        self.cards = Card.where(name=term)\
+            .where(colorIdentity=','.join(colorlist))\
+            .where(pageSize=50)\
+            .where(page=1).all()
 
-            # Remove duplicate entries
-            if config.show_from_all_sets is False:
-                counter = 0
-                unique_cards = []
-                unique_names = []
-                # Reverse cardlist so we get the version with the most modern art
-                for card in reversed(self.cards):
-                    if card.name not in unique_names:
-                        unique_names.append(card.name)
-                        unique_cards.append(card)
-                    else:
-                        counter += 1
-                self.cards.clear()
-                for unique_card in reversed(unique_cards):
-                    self.cards.append(unique_card)
+        # Remove duplicate entries
+        if config.show_from_all_sets is False:
+            counter = 0
+            unique_cards = []
+            unique_names = []
+            # Reverse cardlist so we get the version with the most modern art
+            for card in reversed(self.cards):
+                if card.name not in unique_names:
+                    unique_names.append(card.name)
+                    unique_cards.append(card)
+                else:
+                    counter += 1
+            self.cards.clear()
+            for unique_card in reversed(unique_cards):
+                self.cards.append(unique_card)
 
-                print("Removed " + str(counter) + " duplicate entries")
+            print("Removed " + str(counter) + " duplicate entries")
 
-            for card in self.cards:
-                if card.multiverse_id is not None:
-                    print("Found: " + card.name
-                          + " (" + card.multiverse_id.__str__() + ")")
+        for card in self.cards:
+            if card.multiverse_id is not None:
+                print("Found: " + card.name
+                      + " (" + card.multiverse_id.__str__() + ")")
 
-                    self.store.append([card.multiverse_id,
-                                       util.load_card_image(card, 63 * 2, 88 * 2),
-                                       card.name,
-                                       card.original_text,
-                                       util.create_mana_icons(card.mana_cost)])
-                    print("\n")
-            util.reload_image_cache()
+                self.store.append([card.multiverse_id,
+                                   util.load_card_image(card, 63 * 2, 88 * 2),
+                                   card.name,
+                                   card.original_text,
+                                   util.create_mana_icons(card.mana_cost)])
+                print("")
+
+        util.reload_image_cache()
         self.searchEntry.set_editable(True)
         self.searchbutton.set_sensitive(True)
 
@@ -160,3 +186,41 @@ class SearchView(Gtk.Grid):
                     selected_card = card
             if selected_card is not None:
                 self.details.set_card_detail(selected_card)
+
+    def get_color_filter(self):
+        colorlist = []
+
+        if not self.white_mana_button.get_active():
+            colorlist.append("W")
+        if not self.blue_mana_button.get_active():
+            colorlist.append("U")
+        if not self.black_mana_button.get_active():
+            colorlist.append("B")
+        if not self.red_mana_button.get_active():
+            colorlist.append("R")
+        if not self.green_mana_button.get_active():
+            colorlist.append("G")
+        if not self.colorless_mana_button.get_active():
+            colorlist.append("C")
+        return colorlist
+
+    def mana_toggled(self, toggle_button):
+        iconname = ""
+        if not toggle_button.get_active():
+            iconname = "{" + toggle_button.get_name() + "}"
+        else:
+            iconname = "{" + toggle_button.get_name() + "_alt}"
+        image = Gtk.Image()
+        image.set_from_pixbuf(util.create_mana_icons(iconname))
+        toggle_button.set_image(image)
+
+    def init_mana_buttons(self):
+        # Toggle each Button to deactivate filter an load icon
+        self.red_mana_button.toggled()
+        self.blue_mana_button.toggled()
+        self.green_mana_button.toggled()
+        self.black_mana_button.toggled()
+        self.white_mana_button.toggled()
+        self.colorless_mana_button.toggled()
+        return
+
