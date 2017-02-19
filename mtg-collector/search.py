@@ -42,8 +42,6 @@ class SearchView(Gtk.Grid):
         self.white_mana_button.connect("toggled", self.mana_toggled)
         self.colorless_mana_button = Gtk.ToggleButton(name="C", active=True)
         self.colorless_mana_button.connect("toggled", self.mana_toggled)
-        # Set all Buttons active
-        self.init_mana_buttons()
 
         self.color_chooser = Gtk.Grid(row_spacing=5, column_spacing=5)
         self.color_chooser.attach(self.mana_filter_label, 0, 0, 5, 1)
@@ -61,6 +59,8 @@ class SearchView(Gtk.Grid):
                                margin_end=5, margin_start=5, margin_top=5, margin_bottom=5)
         self.filters.add(self.filters_title)
         self.filters.add(self.color_chooser)
+        # Set all Buttons active
+        self.init_mana_buttons()
 
         # Card List
         self.searchresults = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
