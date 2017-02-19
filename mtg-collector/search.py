@@ -9,9 +9,6 @@ from gi.repository import Gtk, GdkPixbuf, GObject
 from mtgsdk import Card
 import threading
 
-GObject.threads_init()
-
-
 class SearchView(Gtk.Grid):
     def __init__(self):
         Gtk.Grid.__init__(self)
@@ -118,22 +115,35 @@ class SearchView(Gtk.Grid):
         self.selection = self.list.get_selection()
         self.selection.connect("changed", self.on_card_selected)
 
-    def on_appering(self):
-        self.details.rulings.set_visible(False)
+    def do_activate_controls(self, active):
+        self.searchEntry.set_editable(active)
+        self.searchEntry.set_sensitive(active)
+        self.searchbutton.set_sensitive(active)
+        self.red_mana_button.set_sensitive(active)
+        self.blue_mana_button.set_sensitive(active)
+        self.black_mana_button.set_sensitive(active)
+        self.green_mana_button.set_sensitive(active)
+        self.white_mana_button.set_sensitive(active)
+        self.colorless_mana_button.set_sensitive(active)
 
     def online_search_clicked(self, button):
+        # Clear old data from liststore
         self.store.clear()
-        self.searchEntry.set_editable(False)
-        self.searchbutton.set_sensitive(False)
-
-        threading.Thread(target=self.load_cards).start()
+        # Define the function to load cards in a seperate thread, so the UI is not blocked
+        self.loadthread = threading.Thread(target=self.load_cards)
+        # Deamonize Thread so it tops if the main thread exits
+        self.loadthread.setDaemon(True)
+        # Start to load cards
+        self.loadthread.start()
 
     def load_cards(self):
+        # Get search term
         term = self.searchEntry.get_text()
         print("Search for \"" + term + "\" online.")
+        # Lock down search controls
+        GObject.idle_add(self.do_activate_controls, False, priorty=GObject.PRIORITY_DEFAULT)
+        # Get filter rules
         colorlist = self.get_color_filter()
-        print("Filtering color(s): " + ','.join(colorlist) + "\n")
-
         # Load card info from internet
         self.cards = Card.where(name=term)\
             .where(colorIdentity=','.join(colorlist))\
@@ -142,7 +152,6 @@ class SearchView(Gtk.Grid):
 
         # Remove duplicate entries
         if config.show_from_all_sets is False:
-            counter = 0
             unique_cards = []
             unique_names = []
             # Reverse cardlist so we get the version with the most modern art
@@ -150,13 +159,13 @@ class SearchView(Gtk.Grid):
                 if card.name not in unique_names:
                     unique_names.append(card.name)
                     unique_cards.append(card)
-                else:
-                    counter += 1
+            duplicatecounter = len(self.cards) - len(unique_cards)
             self.cards.clear()
             for unique_card in reversed(unique_cards):
                 self.cards.append(unique_card)
 
-            print("Removed " + str(counter) + " duplicate entries")
+            # Show count of removed duplicates
+            print("Removed " + str(duplicatecounter) + " duplicate entries")
 
         for card in self.cards:
             if card.multiverse_id is not None:
@@ -169,10 +178,10 @@ class SearchView(Gtk.Grid):
                                    card.original_text,
                                    util.create_mana_icons(card.mana_cost)])
                 print("")
-
+        # Reload image cache to include new cards
         util.reload_image_cache()
-        self.searchEntry.set_editable(True)
-        self.searchbutton.set_sensitive(True)
+        # Reactivate search controls
+        GObject.idle_add(self.do_activate_controls, True, priority=GObject.PRIORITY_DEFAULT)
 
     def on_card_selected(self, selection):
         (model, pathlist) = selection.get_selected_rows()
@@ -189,19 +198,11 @@ class SearchView(Gtk.Grid):
 
     def get_color_filter(self):
         colorlist = []
-
-        if not self.white_mana_button.get_active():
-            colorlist.append("W")
-        if not self.blue_mana_button.get_active():
-            colorlist.append("U")
-        if not self.black_mana_button.get_active():
-            colorlist.append("B")
-        if not self.red_mana_button.get_active():
-            colorlist.append("R")
-        if not self.green_mana_button.get_active():
-            colorlist.append("G")
-        if not self.colorless_mana_button.get_active():
-            colorlist.append("C")
+        # Go through mana color buttons an get the active filters
+        for widget in self.color_chooser:
+            if isinstance(widget, Gtk.ToggleButton):
+                if not widget.get_active():
+                    colorlist.append(widget.get_name())
         return colorlist
 
     def mana_toggled(self, toggle_button):
@@ -216,11 +217,6 @@ class SearchView(Gtk.Grid):
 
     def init_mana_buttons(self):
         # Toggle each Button to deactivate filter an load icon
-        self.red_mana_button.toggled()
-        self.blue_mana_button.toggled()
-        self.green_mana_button.toggled()
-        self.black_mana_button.toggled()
-        self.white_mana_button.toggled()
-        self.colorless_mana_button.toggled()
-        return
-
+        for widget in self.color_chooser:
+            if isinstance(widget, Gtk.ToggleButton):
+                widget.toggled()

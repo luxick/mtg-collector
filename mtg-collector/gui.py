@@ -4,7 +4,7 @@ import search
 import config
 import util
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
 
 
 class MainWindow(Gtk.Window):
@@ -36,5 +36,6 @@ class MainWindow(Gtk.Window):
 
 win = MainWindow()
 win.connect('delete-event', Gtk.main_quit)
+GObject.threads_init()
 win.show_all()
 Gtk.main()
