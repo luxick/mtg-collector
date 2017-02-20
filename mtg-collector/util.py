@@ -11,6 +11,11 @@ from urllib import request
 imagecache = []
 manaicons ={}
 window = None
+status_bar = None
+
+
+def push_status(msg):
+    status_bar.push(0, msg)
 
 
 def show_message(title, message):

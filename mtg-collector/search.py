@@ -24,9 +24,14 @@ class SearchView(Gtk.Grid):
         self.searchbutton.connect("clicked", self.online_search_clicked)
         self.searchEntryLabel = Gtk.Label(xalign=0, yalign=0)
         self.searchEntryLabel.set_markup("<big>Search for Cards:</big>")
+
+        self.progressbar = Gtk.ProgressBar()
+        self.progressbar.set_no_show_all(True)
+
         self.searchbox.add(self.searchEntryLabel)
         self.searchbox.add(self.searchEntry)
         self.searchbox.add(self.searchbutton)
+        self.searchbox.add(self.progressbar)
         self.searchbox.add(Gtk.HSeparator())
 
         # Filters
@@ -153,6 +158,7 @@ class SearchView(Gtk.Grid):
         self.green_mana_button.set_sensitive(active)
         self.white_mana_button.set_sensitive(active)
         self.colorless_mana_button.set_sensitive(active)
+        self.rarity_combobox.set_sensitive(active)
 
     def online_search_clicked(self, button):
         # Clear old data from liststore
@@ -180,6 +186,7 @@ class SearchView(Gtk.Grid):
 
         # Load card info from internet
         print("\nStart online search")
+        GObject.idle_add(util.push_status, "Searching for cards", priorty=GObject.PRIORITY_DEFAULT)
         try:
             self.cards = Card.where(name=term)\
                 .where(colorIdentity=','.join(colorlist)) \
@@ -217,6 +224,13 @@ class SearchView(Gtk.Grid):
             # Show count of removed duplicates
             print("Removed " + str(duplicatecounter) + " duplicate entries")
 
+        loadprogress_step = 1 / len(self.cards)
+        progress = 0.0
+        GObject.idle_add(self.progressbar.set_visible, True, priorty=GObject.PRIORITY_DEFAULT)
+        GObject.idle_add(self.progressbar.set_fraction, 0.0, priorty=GObject.PRIORITY_DEFAULT)
+
+        GObject.idle_add(util.push_status, "Loading cards...", priorty=GObject.PRIORITY_DEFAULT)
+
         for card in self.cards:
             if card.multiverse_id is not None:
                 print("Found: " + card.name
@@ -227,11 +241,17 @@ class SearchView(Gtk.Grid):
                                    card.name,
                                    card.original_text,
                                    util.create_mana_icons(card.mana_cost)])
+            # update progress bar
+            progress += loadprogress_step
+            GObject.idle_add(self.progressbar.set_fraction, progress, priorty=GObject.PRIORITY_DEFAULT)
         print("")
         # Reload image cache to include new cards
         util.reload_image_cache()
         # Reactivate search controls
         GObject.idle_add(self.do_activate_controls, True, priority=GObject.PRIORITY_DEFAULT)
+        GObject.idle_add(util.push_status, "", priorty=GObject.PRIORITY_DEFAULT)
+        # Hide Progress bar
+        GObject.idle_add(self.progressbar.set_visible, False, priorty=GObject.PRIORITY_DEFAULT)
 
     def on_card_selected(self, selection):
         (model, pathlist) = selection.get_selected_rows()

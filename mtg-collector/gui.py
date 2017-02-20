@@ -19,8 +19,18 @@ class MainWindow(Gtk.Window):
         # Set reference to main window in util
         util.window = self
 
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.add(vbox)
         self.notebook = Gtk.Notebook()
-        self.add(self.notebook)
+
+        vbox.pack_start(self.notebook, True, True, 0)
+        self.status_bar = Gtk.Statusbar()
+        self.status_bar.set_no_show_all(True)
+        vbox.pack_start(self.status_bar, False, False, 0)
+
+        # Set reference to status bar in util
+        util.status_bar = self.status_bar
+        util.push_status("Application started")
 
         self.collectionView = Gtk.Box()
         self.collectionView.add(collection.CollectionView())
@@ -30,6 +40,8 @@ class MainWindow(Gtk.Window):
 
         self.deckView = Gtk.Box()
         self.deckView.add(Gtk.Label("View and organize your Decklists!"))
+
+
 
         self.notebook.append_page(self.searchView, Gtk.Label("Search"))
         self.notebook.append_page(self.collectionView, Gtk.Label("Collection"))
