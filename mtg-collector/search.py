@@ -115,6 +115,14 @@ class SearchView(Gtk.Grid):
         self.selection = self.list.get_selection()
         self.selection.connect("changed", self.on_card_selected)
 
+    def do_show_no_results(self, searchterm):
+        # Should move to main UI, so parent can be used
+        dialog = Gtk.MessageDialog(None, 0, Gtk.MessageType.INFO,
+                                   Gtk.ButtonsType.OK, "No Results")
+        dialog.format_secondary_text("No cards with name \"" + searchterm + "\" were found")
+        dialog.run()
+        dialog.destroy()
+
     def do_activate_controls(self, active):
         self.searchEntry.set_editable(active)
         self.searchEntry.set_sensitive(active)
@@ -149,6 +157,10 @@ class SearchView(Gtk.Grid):
             .where(colorIdentity=','.join(colorlist))\
             .where(pageSize=50)\
             .where(page=1).all()
+
+        if len(self.cards) == 0:
+            GObject.idle_add(self.do_show_no_results, term, priority=GObject.PRIORITY_DEFAULT)
+            return
 
         # Remove duplicate entries
         if config.show_from_all_sets is False:
