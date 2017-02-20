@@ -12,12 +12,14 @@ imagecache = []
 manaicons ={}
 window = None
 
+
 def show_message(title, message):
     dialog = Gtk.MessageDialog(window, 0, Gtk.MessageType.INFO,
                                Gtk.ButtonsType.OK, title)
     dialog.format_secondary_text(message)
     dialog.run()
     dialog.destroy()
+
 
 def load_mana_icons():
     path = os.path.dirname(__file__) + "/resources/mana_icons/"
@@ -30,6 +32,7 @@ def load_mana_icons():
     for image in imagelist:
         img = PImage.open(path + image)
         manaicons[os.path.splitext(image)[0]] = img
+
 
 def reload_image_cache():
     if not os.path.exists(config.cachepath):
@@ -49,11 +52,12 @@ def reload_image_cache():
 def load_dummy_image(sizex, sizey):
     return GdkPixbuf.Pixbuf.new_from_file_at_size(os.path.dirname(__file__) +
                                                   '/resources/images/dummy.jpg', sizex, sizey)
+
 def load_card_image_online(card, sizex, sizey):
     url = card.image_url
     if url is None:
         print("No Image URL provided")
-        return load_dummy_image()
+        return load_dummy_image(sizex, sizey)
     filename = config.cachepath + card.multiverse_id.__str__() + ".PNG"
     print("Loading image from: " + url)
     response = request.urlretrieve(url, filename)

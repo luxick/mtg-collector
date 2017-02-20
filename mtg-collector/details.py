@@ -60,6 +60,12 @@ class DetailBar(Gtk.ScrolledWindow):
         pixbuf = util.load_card_image(card, 63 * 5, 88 * 5)
         self.bigcard.set_from_pixbuf(pixbuf)
 
+    def reset(self):
+        pixbuf = util.load_dummy_image(63 * 5, 88 * 5)
+        self.bigcard.set_from_pixbuf(pixbuf)
+        self.rulingslabel.set_visible(False)
+        self.rulesstore.clear()
+
     def set_card_detail(self, card):
         print("Loading infos for \"" + card.name + "\"")
 

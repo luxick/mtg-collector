@@ -157,6 +157,8 @@ class SearchView(Gtk.Grid):
     def online_search_clicked(self, button):
         # Clear old data from liststore
         self.store.clear()
+        # Reset details pane
+        self.details.reset()
         # Define the function to load cards in a seperate thread, so the UI is not blocked
         self.loadthread = threading.Thread(target=self.load_cards)
         # Deamonize Thread so it tops if the main thread exits
@@ -167,11 +169,12 @@ class SearchView(Gtk.Grid):
     def load_cards(self):
         # Get search term
         term = self.searchEntry.get_text()
+
         # Lock down search controls
         GObject.idle_add(self.do_activate_controls, False, priorty=GObject.PRIORITY_DEFAULT)
+
         # Get filter rules
         colorlist = self.get_color_filter()
-
         tree_iter = self.rarity_combobox.get_active_iter()
         rarityfilter = self.rarity_store.get_value(tree_iter, 0)
 
