@@ -39,8 +39,11 @@ def reload_image_cache():
     imageslist = os.listdir(config.cachepath)
     imagecache.clear()
     for image in imageslist:
-        img = PImage.open(config.cachepath + image)
-        imagecache.append(img)
+        try:
+            img = PImage.open(config.cachepath + image)
+            imagecache.append(img)
+        except OSError as err:
+            print("Error loading image: " + str(err))
 
 
 def load_dummy_image(sizex, sizey):

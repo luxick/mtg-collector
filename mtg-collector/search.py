@@ -30,6 +30,7 @@ class SearchView(Gtk.Grid):
         self.searchbox.add(Gtk.HSeparator())
 
         # Filters
+        # Color of the cards
         self.mana_filter_label = Gtk.Label("Mana Color", xalign=0, yalign=0)
         self.red_mana_button = Gtk.ToggleButton(name="R", active=True)
         self.red_mana_button.connect("toggled", self.mana_toggled)
@@ -53,6 +54,23 @@ class SearchView(Gtk.Grid):
         self.color_chooser.attach(self.green_mana_button, 1, 2, 1, 1)
         self.color_chooser.attach(self.colorless_mana_button, 2, 2, 1, 1)
 
+        # Rarity
+        rarity_label = Gtk.Label("Rarity", xalign=0)
+        self.rarity_store = Gtk.ListStore(str, str)
+        self.rarity_store.append(["", "Any"])
+        self.rarity_store.append(["common", "Common"])
+        self.rarity_store.append(["uncommon", "Uncommon"])
+        self.rarity_store.append(["rare", "Rare"])
+        self.rarity_store.append(["mythic rare", "Mythic Rare"])
+        self.rarity_combobox = Gtk.ComboBox.new_with_model(self.rarity_store)
+        renderer_text = Gtk.CellRendererText()
+        self.rarity_combobox.pack_start(renderer_text, True)
+        self.rarity_combobox.add_attribute(renderer_text, "text", 1)
+
+        self.rarity_control = Gtk.Grid(row_spacing=5, column_spacing=5)
+        self.rarity_control.attach(rarity_label, 0, 0, 1, 1)
+        self.rarity_control.attach(self.rarity_combobox, 1, 0, 1, 1)
+
         self.filters_title = Gtk.Label(xalign=0, yalign=0)
         self.filters_title.set_markup("<big>Filter search results</big>")
 
@@ -60,8 +78,9 @@ class SearchView(Gtk.Grid):
                                margin_end=5, margin_start=5, margin_top=5, margin_bottom=5)
         self.filters.add(self.filters_title)
         self.filters.add(self.color_chooser)
+        self.filters.add(self.rarity_control)
         # Set all Buttons active
-        self.init_mana_buttons()
+        self.do_init_filter_controls()
 
         # Card List
         self.searchresults = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
@@ -153,11 +172,15 @@ class SearchView(Gtk.Grid):
         # Get filter rules
         colorlist = self.get_color_filter()
 
+        tree_iter = self.rarity_combobox.get_active_iter()
+        rarityfilter = self.rarity_store.get_value(tree_iter, 0)
+
         # Load card info from internet
         print("\nStart online search")
         try:
             self.cards = Card.where(name=term)\
-                .where(colorIdentity=','.join(colorlist))\
+                .where(colorIdentity=','.join(colorlist)) \
+                .where(rarity=rarityfilter) \
                 .where(pageSize=50)\
                 .where(page=1).all()
         except URLError as err:
@@ -239,8 +262,10 @@ class SearchView(Gtk.Grid):
         image.set_from_pixbuf(util.create_mana_icons(iconname))
         toggle_button.set_image(image)
 
-    def init_mana_buttons(self):
+    def do_init_filter_controls(self):
         # Toggle each Button to deactivate filter an load icon
         for widget in self.color_chooser:
             if isinstance(widget, Gtk.ToggleButton):
                 widget.toggled()
+        # Set default rarity filter to "Any"
+        self.rarity_combobox.set_active(0)
