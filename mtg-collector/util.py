@@ -3,14 +3,21 @@ import gi
 import re
 import config
 gi.require_version('Gtk', '3.0')
-from gi.repository import GdkPixbuf
+from gi.repository import GdkPixbuf, Gtk
 from PIL import Image as PImage
 from urllib import request
 
 # Loacally stored images for faster loading times
 imagecache = []
 manaicons ={}
+window = None
 
+def show_message(title, message):
+    dialog = Gtk.MessageDialog(window, 0, Gtk.MessageType.INFO,
+                               Gtk.ButtonsType.OK, title)
+    dialog.format_secondary_text(message)
+    dialog.run()
+    dialog.destroy()
 
 def load_mana_icons():
     path = os.path.dirname(__file__) + "/resources/mana_icons/"
@@ -55,7 +62,6 @@ def load_card_image(card, sizex, sizey):
     for image in imagecache:
         filename = os.path.basename(image.filename)
         if filename == card.multiverse_id.__str__() + ".PNG":
-            print("Using local file for image: " + filename)
             return GdkPixbuf.Pixbuf.new_from_file_at_size(image.filename, sizex, sizey)
 
     # No file in local cache found

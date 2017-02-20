@@ -16,6 +16,8 @@ class MainWindow(Gtk.Window):
         # Load local image Data
         util.reload_image_cache()
         util.load_mana_icons()
+        # Set reference to main window in util
+        util.window = self
 
         self.notebook = Gtk.Notebook()
         self.add(self.notebook)
@@ -32,7 +34,6 @@ class MainWindow(Gtk.Window):
         self.notebook.append_page(self.searchView, Gtk.Label("Search"))
         self.notebook.append_page(self.collectionView, Gtk.Label("Collection"))
         self.notebook.append_page(self.deckView, Gtk.Label("Decks"))
-
 
 win = MainWindow()
 win.connect('delete-event', Gtk.main_quit)

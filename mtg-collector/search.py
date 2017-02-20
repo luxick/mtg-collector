@@ -1,3 +1,5 @@
+from urllib.error import URLError
+
 import gi
 from gi.repository import Pango
 import util
@@ -13,7 +15,6 @@ class SearchView(Gtk.Grid):
     def __init__(self):
         Gtk.Grid.__init__(self)
         self.set_column_spacing(5)
-
         # Search Box
         self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5,
                                  margin_end=5, margin_start=5, margin_top=5, margin_bottom=5)
@@ -117,7 +118,7 @@ class SearchView(Gtk.Grid):
 
     def do_show_no_results(self, searchterm):
         # Should move to main UI, so parent can be used
-        dialog = Gtk.MessageDialog(None, 0, Gtk.MessageType.INFO,
+        dialog = Gtk.MessageDialog(self.parent, 0, Gtk.MessageType.INFO,
                                    Gtk.ButtonsType.OK, "No Results")
         dialog.format_secondary_text("No cards with name \"" + searchterm + "\" were found")
         dialog.run()
@@ -147,19 +148,30 @@ class SearchView(Gtk.Grid):
     def load_cards(self):
         # Get search term
         term = self.searchEntry.get_text()
-        print("Search for \"" + term + "\" online.")
         # Lock down search controls
         GObject.idle_add(self.do_activate_controls, False, priorty=GObject.PRIORITY_DEFAULT)
         # Get filter rules
         colorlist = self.get_color_filter()
-        # Load card info from internet
-        self.cards = Card.where(name=term)\
-            .where(colorIdentity=','.join(colorlist))\
-            .where(pageSize=50)\
-            .where(page=1).all()
 
+        # Load card info from internet
+        print("\nStart online search")
+        try:
+            self.cards = Card.where(name=term)\
+                .where(colorIdentity=','.join(colorlist))\
+                .where(pageSize=50)\
+                .where(page=1).all()
+        except URLError as err:
+            print("Error connecting to the internet")
+            GObject.idle_add(util.show_message, "Connection Error", str(err.reason), priority=GObject.PRIORITY_DEFAULT)
+            GObject.idle_add(self.do_activate_controls, True, priorty=GObject.PRIORITY_DEFAULT)
+            return
+
+        print("Done. Found " + str(len(self.cards)) + " cards")
         if len(self.cards) == 0:
-            GObject.idle_add(self.do_show_no_results, term, priority=GObject.PRIORITY_DEFAULT)
+            messagetext = "No cards with name \"" + term + "\" found"
+            GObject.idle_add(util.show_message, "No Results", messagetext, priority=GObject.PRIORITY_DEFAULT)
+            # Reactivate search controls
+            GObject.idle_add(self.do_activate_controls, True, priority=GObject.PRIORITY_DEFAULT)
             return
 
         # Remove duplicate entries
@@ -189,7 +201,7 @@ class SearchView(Gtk.Grid):
                                    card.name,
                                    card.original_text,
                                    util.create_mana_icons(card.mana_cost)])
-                print("")
+        print("")
         # Reload image cache to include new cards
         util.reload_image_cache()
         # Reactivate search controls
