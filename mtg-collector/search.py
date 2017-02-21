@@ -67,14 +67,26 @@ class SearchView(Gtk.Grid):
         self.rarity_store.append(["uncommon", "Uncommon"])
         self.rarity_store.append(["rare", "Rare"])
         self.rarity_store.append(["mythic rare", "Mythic Rare"])
-        self.rarity_combobox = Gtk.ComboBox.new_with_model(self.rarity_store)
+        self.rarity_combo = Gtk.ComboBox.new_with_model(self.rarity_store)
         renderer_text = Gtk.CellRendererText()
-        self.rarity_combobox.pack_start(renderer_text, True)
-        self.rarity_combobox.add_attribute(renderer_text, "text", 1)
+        self.rarity_combo.pack_start(renderer_text, True)
+        self.rarity_combo.add_attribute(renderer_text, "text", 1)
 
-        self.rarity_control = Gtk.Grid(row_spacing=5, column_spacing=5)
-        self.rarity_control.attach(rarity_label, 0, 0, 1, 1)
-        self.rarity_control.attach(self.rarity_combobox, 1, 0, 1, 1)
+        type_label = Gtk.Label("Type", xalign=0)
+        self.type_store = Gtk.ListStore(str)
+        types = [ "Any", "Creature", "Artifact", "Instant",
+                            "Aura", "Enchantment", "Sorcery", "Land", "Planeswalker"]
+        for cardtype in types:
+            self.type_store.append([cardtype])
+        self.type_combo = Gtk.ComboBox.new_with_model(self.type_store)
+        self.type_combo.pack_start(renderer_text, True)
+        self.type_combo.add_attribute(renderer_text, "text", 0)
+
+        self.additional_filters = Gtk.Grid(row_spacing=5, column_spacing=5)
+        self.additional_filters.attach(rarity_label, 0, 0, 1, 1)
+        self.additional_filters.attach(self.rarity_combo, 1, 0, 1, 1)
+        self.additional_filters.attach(type_label, 0, 1, 1, 1)
+        self.additional_filters.attach(self.type_combo, 1 ,1, 1, 1)
 
         self.filters_title = Gtk.Label(xalign=0, yalign=0)
         self.filters_title.set_markup("<big>Filter search results</big>")
@@ -83,7 +95,7 @@ class SearchView(Gtk.Grid):
                                margin_end=5, margin_start=5, margin_top=5, margin_bottom=5)
         self.filters.add(self.filters_title)
         self.filters.add(self.color_chooser)
-        self.filters.add(self.rarity_control)
+        self.filters.add(self.additional_filters)
         # Set all Buttons active
         self.do_init_filter_controls()
 
@@ -158,7 +170,8 @@ class SearchView(Gtk.Grid):
         self.green_mana_button.set_sensitive(active)
         self.white_mana_button.set_sensitive(active)
         self.colorless_mana_button.set_sensitive(active)
-        self.rarity_combobox.set_sensitive(active)
+        self.rarity_combo.set_sensitive(active)
+        self.type_combo.set_sensitive(active)
 
     def online_search_clicked(self, button):
         # Clear old data from liststore
@@ -181,15 +194,21 @@ class SearchView(Gtk.Grid):
 
         # Get filter rules
         colorlist = self.get_color_filter()
-        tree_iter = self.rarity_combobox.get_active_iter()
+        tree_iter = self.rarity_combo.get_active_iter()
         rarityfilter = self.rarity_store.get_value(tree_iter, 0)
+
+        tree_iter = self.type_combo.get_active_iter()
+        typefilter = self.type_store.get_value(tree_iter, 0)
+        if typefilter == "Any":
+            typefilter = ""
 
         # Load card info from internet
         print("\nStart online search")
         GObject.idle_add(util.push_status, "Searching for cards", priorty=GObject.PRIORITY_DEFAULT)
         try:
             self.cards = Card.where(name=term)\
-                .where(colorIdentity=','.join(colorlist)) \
+                .where(colorIdentity=",".join(colorlist)) \
+                .where(types=typefilter)\
                 .where(rarity=rarityfilter) \
                 .where(pageSize=50)\
                 .where(page=1).all()
@@ -235,6 +254,7 @@ class SearchView(Gtk.Grid):
             if card.multiverse_id is not None:
                 print("Found: " + card.name
                       + " (" + card.multiverse_id.__str__() + ")")
+                print("Types: " + str(card.type))
 
                 self.store.append([card.multiverse_id,
                                    util.load_card_image(card, 63 * 2, 88 * 2),
@@ -271,13 +291,13 @@ class SearchView(Gtk.Grid):
         # Go through mana color buttons an get the active filters
         for widget in self.color_chooser:
             if isinstance(widget, Gtk.ToggleButton):
-                if not widget.get_active():
+                if widget.get_active():
                     colorlist.append(widget.get_name())
         return colorlist
 
     def mana_toggled(self, toggle_button):
         iconname = ""
-        if not toggle_button.get_active():
+        if toggle_button.get_active():
             iconname = "{" + toggle_button.get_name() + "}"
         else:
             iconname = "{" + toggle_button.get_name() + "_alt}"
@@ -290,5 +310,7 @@ class SearchView(Gtk.Grid):
         for widget in self.color_chooser:
             if isinstance(widget, Gtk.ToggleButton):
                 widget.toggled()
-        # Set default rarity filter to "Any"
-        self.rarity_combobox.set_active(0)
+                widget.set_active(False)
+        # Set default rarity and type filters to "Any"
+        self.rarity_combo.set_active(0)
+        self.type_combo.set_active(0)
