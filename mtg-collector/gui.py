@@ -19,6 +19,8 @@ class MainWindow(Gtk.Window):
         # Set reference to main window in util
         util.window = self
 
+        util.load_sets()
+
         vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.add(vbox)
         self.notebook = Gtk.Notebook()

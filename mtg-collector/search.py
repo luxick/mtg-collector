@@ -15,6 +15,7 @@ class SearchView(Gtk.Grid):
     def __init__(self):
         Gtk.Grid.__init__(self)
         self.set_column_spacing(5)
+
         # Search Box
         self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5,
                                  margin_end=5, margin_start=5, margin_top=5, margin_bottom=5)
@@ -59,6 +60,12 @@ class SearchView(Gtk.Grid):
         self.color_chooser.attach(self.green_mana_button, 1, 2, 1, 1)
         self.color_chooser.attach(self.colorless_mana_button, 2, 2, 1, 1)
 
+        # Text renderer for the Combo Boxes
+        renderer_text = Gtk.CellRendererText()
+        renderer_text.set_property("wrap-mode", Pango.WrapMode.WORD)
+        renderer_text.set_property("wrap-width", 50)
+        renderer_text.props.ellipsize = Pango.EllipsizeMode.END
+
         # Rarity
         rarity_label = Gtk.Label("Rarity", xalign=0)
         self.rarity_store = Gtk.ListStore(str, str)
@@ -68,14 +75,32 @@ class SearchView(Gtk.Grid):
         self.rarity_store.append(["rare", "Rare"])
         self.rarity_store.append(["mythic rare", "Mythic Rare"])
         self.rarity_combo = Gtk.ComboBox.new_with_model(self.rarity_store)
-        renderer_text = Gtk.CellRendererText()
         self.rarity_combo.pack_start(renderer_text, True)
         self.rarity_combo.add_attribute(renderer_text, "text", 1)
 
+        # Set
+        set_label = Gtk.Label("Set", xalign=0)
+        self.set_store = Gtk.ListStore(str, str)
+        self.set_store.append(["", "Any"])
+        for set in util.set_list:
+            self.set_store.append([set.code, set.name])
+        self.set_combo = Gtk.ComboBox.new_with_model_and_entry(self.set_store)
+        self.set_combo.pack_start(renderer_text, True)
+        self.set_combo.add_attribute(renderer_text, "text", 1)
+        self.set_combo.set_entry_text_column(1)
+
+        # Autocomplete search in Set Combobox
+        completer = Gtk.EntryCompletion()
+        completer.set_model(self.set_store)
+        completer.set_text_column(1)
+        completer.connect("match-selected", self.match_selected)
+        self.set_combo.get_child().set_completion(completer)
+
+        #Type
         type_label = Gtk.Label("Type", xalign=0)
         self.type_store = Gtk.ListStore(str)
         types = [ "Any", "Creature", "Artifact", "Instant",
-                            "Aura", "Enchantment", "Sorcery", "Land", "Planeswalker"]
+                            "Enchantment", "Sorcery", "Land", "Planeswalker"]
         for cardtype in types:
             self.type_store.append([cardtype])
         self.type_combo = Gtk.ComboBox.new_with_model(self.type_store)
@@ -85,8 +110,12 @@ class SearchView(Gtk.Grid):
         self.additional_filters = Gtk.Grid(row_spacing=5, column_spacing=5)
         self.additional_filters.attach(rarity_label, 0, 0, 1, 1)
         self.additional_filters.attach(self.rarity_combo, 1, 0, 1, 1)
+
         self.additional_filters.attach(type_label, 0, 1, 1, 1)
         self.additional_filters.attach(self.type_combo, 1 ,1, 1, 1)
+
+        self.additional_filters.attach(set_label, 0, 2, 1, 1)
+        self.additional_filters.attach(self.set_combo, 1, 2, 1, 1)
 
         self.filters_title = Gtk.Label(xalign=0, yalign=0)
         self.filters_title.set_markup("<big>Filter search results</big>")
@@ -152,6 +181,9 @@ class SearchView(Gtk.Grid):
         self.selection = self.list.get_selection()
         self.selection.connect("changed", self.on_card_selected)
 
+    def match_selected(self, completion, model, iter):
+        self.set_combo.set_active_iter(iter)
+
     def do_show_no_results(self, searchterm):
         # Should move to main UI, so parent can be used
         dialog = Gtk.MessageDialog(self.parent, 0, Gtk.MessageType.INFO,
@@ -159,19 +191,6 @@ class SearchView(Gtk.Grid):
         dialog.format_secondary_text("No cards with name \"" + searchterm + "\" were found")
         dialog.run()
         dialog.destroy()
-
-    def do_activate_controls(self, active):
-        self.searchEntry.set_editable(active)
-        self.searchEntry.set_sensitive(active)
-        self.searchbutton.set_sensitive(active)
-        self.red_mana_button.set_sensitive(active)
-        self.blue_mana_button.set_sensitive(active)
-        self.black_mana_button.set_sensitive(active)
-        self.green_mana_button.set_sensitive(active)
-        self.white_mana_button.set_sensitive(active)
-        self.colorless_mana_button.set_sensitive(active)
-        self.rarity_combo.set_sensitive(active)
-        self.type_combo.set_sensitive(active)
 
     def online_search_clicked(self, button):
         # Clear old data from liststore
@@ -202,6 +221,9 @@ class SearchView(Gtk.Grid):
         if typefilter == "Any":
             typefilter = ""
 
+        tree_iter = self.set_combo.get_active_iter()
+        setfilter = self.set_store.get_value(tree_iter, 0)
+
         # Load card info from internet
         print("\nStart online search")
         GObject.idle_add(util.push_status, "Searching for cards", priorty=GObject.PRIORITY_DEFAULT)
@@ -209,6 +231,7 @@ class SearchView(Gtk.Grid):
             self.cards = Card.where(name=term)\
                 .where(colorIdentity=",".join(colorlist)) \
                 .where(types=typefilter)\
+                .where(set=setfilter)\
                 .where(rarity=rarityfilter) \
                 .where(pageSize=50)\
                 .where(page=1).all()
@@ -252,10 +275,6 @@ class SearchView(Gtk.Grid):
 
         for card in self.cards:
             if card.multiverse_id is not None:
-                print("Found: " + card.name
-                      + " (" + card.multiverse_id.__str__() + ")")
-                print("Types: " + str(card.type))
-
                 self.store.append([card.multiverse_id,
                                    util.load_card_image(card, 63 * 2, 88 * 2),
                                    card.name,
@@ -314,3 +333,18 @@ class SearchView(Gtk.Grid):
         # Set default rarity and type filters to "Any"
         self.rarity_combo.set_active(0)
         self.type_combo.set_active(0)
+        self.set_combo.set_active(0)
+
+    def do_activate_controls(self, active):
+        self.searchEntry.set_editable(active)
+        self.searchEntry.set_sensitive(active)
+        #self.searchbutton.set_sensitive(active)
+        self.red_mana_button.set_sensitive(active)
+        self.blue_mana_button.set_sensitive(active)
+        self.black_mana_button.set_sensitive(active)
+        self.green_mana_button.set_sensitive(active)
+        self.white_mana_button.set_sensitive(active)
+        self.colorless_mana_button.set_sensitive(active)
+        self.rarity_combo.set_sensitive(active)
+        self.type_combo.set_sensitive(active)
+        self.set_combo.set_sensitive(active)

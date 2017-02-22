@@ -6,13 +6,28 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import GdkPixbuf, Gtk
 from PIL import Image as PImage
 from urllib import request
+from mtgsdk import Set
+from urllib.error import URLError
 
 # Loacally stored images for faster loading times
 imagecache = []
-manaicons ={}
+manaicons = {}
+
+set_list = []
+
 window = None
 status_bar = None
 
+
+def load_sets():
+    #setfile = os.open(config.cachepath + "/sets")
+    try:
+        sets = Set.all()
+    except URLError as err:
+        show_message("Connection Error", str(err.reason))
+        return
+    for set in sets:
+        set_list.append(set)
 
 def push_status(msg):
     status_bar.push(0, msg)
@@ -58,13 +73,14 @@ def load_dummy_image(sizex, sizey):
     return GdkPixbuf.Pixbuf.new_from_file_at_size(os.path.dirname(__file__) +
                                                   '/resources/images/dummy.jpg', sizex, sizey)
 
+
 def load_card_image_online(card, sizex, sizey):
     url = card.image_url
     if url is None:
         print("No Image URL provided")
         return load_dummy_image(sizex, sizey)
     filename = config.cachepath + card.multiverse_id.__str__() + ".PNG"
-    print("Loading image from: " + url)
+    print("Loading image for " + card.name +  "from: " + url)
     response = request.urlretrieve(url, filename)
     return GdkPixbuf.Pixbuf.new_from_file_at_size(filename, sizex, sizey)
 
