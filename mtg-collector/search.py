@@ -52,13 +52,13 @@ class SearchView(Gtk.Grid):
         self.colorless_mana_button.connect("toggled", self.mana_toggled)
 
         self.color_chooser = Gtk.Grid(row_spacing=5, column_spacing=5)
-        self.color_chooser.attach(self.mana_filter_label, 0, 0, 5, 1)
-        self.color_chooser.attach(self.white_mana_button, 0, 1, 1, 1)
-        self.color_chooser.attach(self.blue_mana_button, 1, 1, 1, 1)
-        self.color_chooser.attach(self.black_mana_button, 2, 1, 1, 1)
-        self.color_chooser.attach(self.red_mana_button, 0, 2, 1, 1)
-        self.color_chooser.attach(self.green_mana_button, 1, 2, 1, 1)
-        self.color_chooser.attach(self.colorless_mana_button, 2, 2, 1, 1)
+        self.color_chooser.attach(self.mana_filter_label,       0, 0, 1, 1)
+        self.color_chooser.attach(self.white_mana_button,       1, 0, 1, 1)
+        self.color_chooser.attach(self.blue_mana_button,        2, 0, 1, 1)
+        self.color_chooser.attach(self.black_mana_button,       3, 0, 1, 1)
+        self.color_chooser.attach(self.red_mana_button,         1, 1, 1, 1)
+        self.color_chooser.attach(self.green_mana_button,       2, 1, 1, 1)
+        self.color_chooser.attach(self.colorless_mana_button,   3, 1, 1, 1)
 
         # Text renderer for the Combo Boxes
         renderer_text = Gtk.CellRendererText()
