@@ -29,7 +29,6 @@ def load_sets():
     if not os.path.isfile(path):
         # use mtgsdk api to retrieve al list of all sets
         new_sets = network.net_load_sets()
-
         if new_sets == "":
             show_message("API Error", "Could not retrieve Set infos")
             return
@@ -37,8 +36,10 @@ def load_sets():
         pickle.dump(new_sets, open(config.cachepath + "sets", 'wb'))
     # Deserialize set data from local file
     sets = pickle.load(open(config.cachepath + "sets", 'rb'))
-    for set in sets:
+    # Sort the loaded sets based on the sets name
+    for set in sorted(sets, key=lambda x: x.name):
         set_list.append(set)
+
 
 def push_status(msg):
     status_bar.push(0, msg)

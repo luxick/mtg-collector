@@ -37,7 +37,8 @@ class SearchView(Gtk.Grid):
 
         # Filters
         # Color of the cards
-        self.mana_filter_label = Gtk.Label("Mana Color", xalign=0, yalign=0)
+        color_cooser_label = Gtk.Label("Mana Color", xalign=0, yalign=0)
+
         self.red_mana_button = Gtk.ToggleButton(name="R", active=True)
         self.red_mana_button.connect("toggled", self.mana_toggled)
         self.blue_mana_button = Gtk.ToggleButton(name="U", active=True)
@@ -52,18 +53,17 @@ class SearchView(Gtk.Grid):
         self.colorless_mana_button.connect("toggled", self.mana_toggled)
 
         self.color_chooser = Gtk.Grid(row_spacing=5, column_spacing=5)
-        self.color_chooser.attach(self.mana_filter_label,       0, 0, 1, 1)
-        self.color_chooser.attach(self.white_mana_button,       1, 0, 1, 1)
-        self.color_chooser.attach(self.blue_mana_button,        2, 0, 1, 1)
-        self.color_chooser.attach(self.black_mana_button,       3, 0, 1, 1)
-        self.color_chooser.attach(self.red_mana_button,         1, 1, 1, 1)
-        self.color_chooser.attach(self.green_mana_button,       2, 1, 1, 1)
-        self.color_chooser.attach(self.colorless_mana_button,   3, 1, 1, 1)
+        self.color_chooser.attach(self.white_mana_button,       0, 0, 1, 1)
+        self.color_chooser.attach(self.blue_mana_button,        1, 0, 1, 1)
+        self.color_chooser.attach(self.black_mana_button,       2, 0, 1, 1)
+        self.color_chooser.attach(self.red_mana_button,         0, 1, 1, 1)
+        self.color_chooser.attach(self.green_mana_button,       1, 1, 1, 1)
+        self.color_chooser.attach(self.colorless_mana_button,   2, 1, 1, 1)
 
         # Text renderer for the Combo Boxes
         renderer_text = Gtk.CellRendererText()
-        renderer_text.set_property("wrap-mode", Pango.WrapMode.WORD)
-        renderer_text.set_property("wrap-width", 50)
+        renderer_text.set_property("wrap-width", 5)
+        renderer_text.set_property("wrap-mode", Pango.WrapMode.CHAR)
         renderer_text.props.ellipsize = Pango.EllipsizeMode.END
 
         # Rarity
@@ -84,47 +84,51 @@ class SearchView(Gtk.Grid):
         self.set_store.append(["", "Any"])
         for set in util.set_list:
             self.set_store.append([set.code, set.name])
-        self.set_combo = Gtk.ComboBox.new_with_model_and_entry(self.set_store)
+        self.set_combo = Gtk.ComboBox.new_with_model(self.set_store)
         self.set_combo.pack_start(renderer_text, True)
         self.set_combo.add_attribute(renderer_text, "text", 1)
         self.set_combo.set_entry_text_column(1)
+        self.set_combo.set_wrap_width(5)
+        self.set_combo.set_hexpand(False)
 
         # Autocomplete search in Set Combobox
-        completer = Gtk.EntryCompletion()
-        completer.set_model(self.set_store)
-        completer.set_text_column(1)
-        completer.connect("match-selected", self.match_selected)
-        self.set_combo.get_child().set_completion(completer)
+        # completer = Gtk.EntryCompletion()
+        # completer.set_model(self.set_store)
+        # completer.set_text_column(1)
+        # completer.connect("match-selected", self.match_selected)
+        # self.set_combo.get_child().set_completion(completer)
 
         #Type
         type_label = Gtk.Label("Type", xalign=0)
         self.type_store = Gtk.ListStore(str)
-        types = [ "Any", "Creature", "Artifact", "Instant",
-                            "Enchantment", "Sorcery", "Land", "Planeswalker"]
+        types = ["Any", "Creature", "Artifact", "Instant"
+            , "Enchantment", "Sorcery", "Land", "Planeswalker"]
         for cardtype in types:
             self.type_store.append([cardtype])
         self.type_combo = Gtk.ComboBox.new_with_model(self.type_store)
         self.type_combo.pack_start(renderer_text, True)
         self.type_combo.add_attribute(renderer_text, "text", 0)
 
-        self.additional_filters = Gtk.Grid(row_spacing=5, column_spacing=5)
-        self.additional_filters.attach(rarity_label, 0, 0, 1, 1)
-        self.additional_filters.attach(self.rarity_combo, 1, 0, 1, 1)
+        self.filters_grid = Gtk.Grid(row_spacing=5, column_spacing=5)
+        self.filters_grid.attach(color_cooser_label, 0, 0, 1, 1)
+        self.filters_grid.attach(self.color_chooser, 1, 0, 1, 1)
 
-        self.additional_filters.attach(type_label, 0, 1, 1, 1)
-        self.additional_filters.attach(self.type_combo, 1 ,1, 1, 1)
+        self.filters_grid.attach(rarity_label, 0, 1, 1, 1)
+        self.filters_grid.attach(self.rarity_combo, 1, 1, 1, 1)
 
-        self.additional_filters.attach(set_label, 0, 2, 1, 1)
-        self.additional_filters.attach(self.set_combo, 1, 2, 1, 1)
+        self.filters_grid.attach(type_label, 0, 2, 1, 1)
+        self.filters_grid.attach(self.type_combo, 1, 2, 1, 1)
+
+        self.filters_grid.attach(set_label, 0, 3, 1, 1)
+        self.filters_grid.attach(self.set_combo, 1, 3, 1, 1)
 
         self.filters_title = Gtk.Label(xalign=0, yalign=0)
         self.filters_title.set_markup("<big>Filter search results</big>")
 
         self.filters = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5,
                                margin_end=5, margin_start=5, margin_top=5, margin_bottom=5)
-        self.filters.add(self.filters_title)
-        self.filters.add(self.color_chooser)
-        self.filters.add(self.additional_filters)
+        self.filters.pack_start(self.filters_title, False, False, 5)
+        self.filters.pack_start(self.filters_grid, False, False, 0)
         # Set all Buttons active
         self.do_init_filter_controls()
 
@@ -169,14 +173,23 @@ class SearchView(Gtk.Grid):
         # Detail View for selected Card
         self.details = details.DetailBar()
         # Bring it all together
-        self.attach(self.searchbox, 0, 0, 1, 1)
-        self.attach(self.filters, 0, 1, 1, 1)
-        self.attach(self.searchresults, 2, 0, 1, 2)
-        self.attach(self.details, 4, 0, 1, 2)
+        left_pane = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        left_pane.pack_start(self.searchbox, False, False, 0)
+        left_pane.pack_start(self.filters, False, False, 0)
+        left_pane.set_hexpand(False)
+        # Search
+        self.attach(left_pane, 0, 0, 1, 1)
+        # Separator
+        self.attach(Gtk.VSeparator(), 1, 0, 1, 1)
+        # List
+        self.attach(self.searchresults, 2, 0, 1, 1)
+        # Separator
+        self.attach(Gtk.VSeparator(), 3, 0, 1, 1)
+        # Details
+        self.attach(self.details, 4, 0, 1, 1)
 
-        # Vertical Separators
-        self.attach(Gtk.VSeparator(), 1, 0, 1, 2)
-        self.attach(Gtk.VSeparator(), 3, 0, 1, 2)
+
+
 
         self.selection = self.list.get_selection()
         self.selection.connect("changed", self.on_card_selected)
