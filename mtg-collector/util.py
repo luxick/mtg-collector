@@ -1,20 +1,16 @@
-import json
 import os
 import pickle
-
 import gi
 import re
-
 import config
 import network
-gi.require_version('Gtk', '3.0')
+
 from gi.repository import GdkPixbuf, Gtk
 from PIL import Image as PImage
 from urllib import request
-from mtgsdk import Set
-from urllib.error import URLError, HTTPError
+gi.require_version('Gtk', '3.0')
 
-# Loacally stored images for faster loading times
+# Locally stored images for faster loading times
 imagecache = []
 manaicons = {}
 
@@ -25,7 +21,7 @@ status_bar = None
 
 
 def load_sets():
-    path = config.cachepath + "sets"
+    path = config.cache_path + "sets"
     if not os.path.isfile(path):
         # use mtgsdk api to retrieve al list of all sets
         new_sets = network.net_load_sets()
@@ -33,9 +29,9 @@ def load_sets():
             show_message("API Error", "Could not retrieve Set infos")
             return
         # Serialize the loaded data to a file
-        pickle.dump(new_sets, open(config.cachepath + "sets", 'wb'))
+        pickle.dump(new_sets, open(config.cache_path + "sets", 'wb'))
     # Deserialize set data from local file
-    sets = pickle.load(open(config.cachepath + "sets", 'rb'))
+    sets = pickle.load(open(config.cache_path + "sets", 'rb'))
     # Sort the loaded sets based on the sets name
     for set in sorted(sets, key=lambda x: x.name):
         set_list.append(set)
@@ -67,23 +63,23 @@ def load_mana_icons():
 
 
 def reload_image_cache():
-    if not os.path.exists(config.cachepath):
-        os.makedirs(config.cachepath)
+    if not os.path.exists(config.image_cache_path):
+        os.makedirs(config.image_cache_path)
 
     # return array of images
-    imageslist = os.listdir(config.cachepath)
+    imageslist = os.listdir(config.image_cache_path)
     imagecache.clear()
     for image in imageslist:
         try:
-            img = PImage.open(config.cachepath + image)
+            img = PImage.open(config.image_cache_path + image)
             imagecache.append(img)
         except OSError as err:
             print("Error loading image: " + str(err))
 
 
 def load_dummy_image(sizex, sizey):
-    return GdkPixbuf.Pixbuf.new_from_file_at_size(os.path.dirname(__file__) +
-                                                  '/resources/images/dummy.jpg', sizex, sizey)
+    return GdkPixbuf.Pixbuf.new_from_file_at_size(os.path.dirname(__file__)
+                                                  + '/resources/images/dummy.jpg', sizex, sizey)
 
 
 def load_card_image_online(card, sizex, sizey):
@@ -91,7 +87,7 @@ def load_card_image_online(card, sizex, sizey):
     if url is None:
         print("No Image URL provided")
         return load_dummy_image(sizex, sizey)
-    filename = config.cachepath + card.multiverse_id.__str__() + ".PNG"
+    filename = config.image_cache_path + card.multiverse_id.__str__() + ".PNG"
     print("Loading image for " + card.name +  "from: " + url)
     response = request.urlretrieve(url, filename)
     return GdkPixbuf.Pixbuf.new_from_file_at_size(filename, sizex, sizey)
@@ -128,8 +124,8 @@ def create_mana_icons(mana_string):
             image.paste(loaded, (xpos, 0))
         poscounter += 1
 
-    image.save(config.cachepath + "manaicon.png", "PNG")
-    pixbuf = GdkPixbuf.Pixbuf.new_from_file(config.cachepath + "manaicon.png")
+    image.save(config.cache_path + "manaicon.png", "PNG")
+    pixbuf = GdkPixbuf.Pixbuf.new_from_file(config.cache_path + "manaicon.png")
     pixbuf = pixbuf.scale_simple(image.width / 5, image.height / 5, GdkPixbuf.InterpType.HYPER)
-    os.remove(config.cachepath + "manaicon.png")
+    os.remove(config.cache_path + "manaicon.png")
     return pixbuf

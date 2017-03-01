@@ -9,7 +9,7 @@ from gi.repository import Gtk, GObject
 
 class MainWindow(Gtk.Window):
     def __init__(self):
-        Gtk.Window.__init__(self, title=config.applicationtitle)
+        Gtk.Window.__init__(self, title=config.application_title)
         self.set_border_width(2)
         self.set_size_request(1000, 700)
 

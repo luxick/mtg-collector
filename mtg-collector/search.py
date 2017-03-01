@@ -1,15 +1,14 @@
-from urllib.error import URLError, HTTPError
-
-import gi
-from gi.repository import Pango
 import util
 import details
 import config
-
-gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GdkPixbuf, GObject
-from mtgsdk import Card
 import threading
+import gi
+from urllib.error import URLError, HTTPError
+from mtgsdk import Card
+from gi.repository import Gtk, GdkPixbuf, GObject, Pango
+gi.require_version('Gtk', '3.0')
+
+
 
 class SearchView(Gtk.Grid):
     def __init__(self):
@@ -53,12 +52,12 @@ class SearchView(Gtk.Grid):
         self.colorless_mana_button.connect("toggled", self.mana_toggled)
 
         self.color_chooser = Gtk.Grid(row_spacing=5, column_spacing=5)
-        self.color_chooser.attach(self.white_mana_button,       0, 0, 1, 1)
-        self.color_chooser.attach(self.blue_mana_button,        1, 0, 1, 1)
-        self.color_chooser.attach(self.black_mana_button,       2, 0, 1, 1)
-        self.color_chooser.attach(self.red_mana_button,         0, 1, 1, 1)
-        self.color_chooser.attach(self.green_mana_button,       1, 1, 1, 1)
-        self.color_chooser.attach(self.colorless_mana_button,   2, 1, 1, 1)
+        self.color_chooser.attach(self.white_mana_button, 0, 0, 1, 1)
+        self.color_chooser.attach(self.blue_mana_button, 1, 0, 1, 1)
+        self.color_chooser.attach(self.black_mana_button, 2, 0, 1, 1)
+        self.color_chooser.attach(self.red_mana_button, 0, 1, 1, 1)
+        self.color_chooser.attach(self.green_mana_button, 1, 1, 1, 1)
+        self.color_chooser.attach(self.colorless_mana_button, 2, 1, 1, 1)
 
         # Text renderer for the Combo Boxes
         renderer_text = Gtk.CellRendererText()
@@ -98,7 +97,7 @@ class SearchView(Gtk.Grid):
         # completer.connect("match-selected", self.match_selected)
         # self.set_combo.get_child().set_completion(completer)
 
-        #Type
+        # Type
         type_label = Gtk.Label("Type", xalign=0)
         self.type_store = Gtk.ListStore(str)
         types = ["Any", "Creature", "Artifact", "Instant"
@@ -152,23 +151,23 @@ class SearchView(Gtk.Grid):
         info.set_padding(5, 5)
 
         index = Gtk.CellRendererText()
-        self.indexcolumn = Gtk.TreeViewColumn(title=index, cell_renderer=index, text=0)
-        self.indexcolumn.set_visible(False)
-        self.column1 = Gtk.TreeViewColumn(title="Image", cell_renderer=image, pixbuf=1)
-        self.column1.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        self.column2 = Gtk.TreeViewColumn(title="Name", cell_renderer=title, text=2)
-        self.column2.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        self.column3 = Gtk.TreeViewColumn(title="Card Text", cell_renderer=info, text=3)
-        self.column3.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        self.column3.set_resizable(True)
-        self.column3.set_expand(True)
-        self.column4 = Gtk.TreeViewColumn(title="Mana Cost", cell_renderer=image, pixbuf=4)
-        self.column4.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+        col_id = Gtk.TreeViewColumn(title=index, cell_renderer=index, text=0)
+        col_id.set_visible(False)
+        col_image = Gtk.TreeViewColumn(title="Image", cell_renderer=image, pixbuf=1)
+        col_image.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+        col_name = Gtk.TreeViewColumn(title="Name", cell_renderer=title, text=2)
+        col_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+        col_text = Gtk.TreeViewColumn(title="Card Text", cell_renderer=info, text=3)
+        col_text.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+        col_text.set_resizable(True)
+        col_text.set_expand(True)
+        col_mana = Gtk.TreeViewColumn(title="Mana Cost", cell_renderer=image, pixbuf=4)
+        col_mana.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 
-        self.list.append_column(self.column1)
-        self.list.append_column(self.column2)
-        self.list.append_column(self.column3)
-        self.list.append_column(self.column4)
+        self.list.append_column(col_image)
+        self.list.append_column(col_name)
+        self.list.append_column(col_text)
+        self.list.append_column(col_mana)
 
         # Detail View for selected Card
         self.details = details.DetailBar()
@@ -187,9 +186,6 @@ class SearchView(Gtk.Grid):
         self.attach(Gtk.VSeparator(), 3, 0, 1, 1)
         # Details
         self.attach(self.details, 4, 0, 1, 1)
-
-
-
 
         self.selection = self.list.get_selection()
         self.selection.connect("changed", self.on_card_selected)
@@ -241,12 +237,12 @@ class SearchView(Gtk.Grid):
         print("\nStart online search")
         GObject.idle_add(util.push_status, "Searching for cards", priorty=GObject.PRIORITY_DEFAULT)
         try:
-            self.cards = Card.where(name=term)\
+            self.cards = Card.where(name=term) \
                 .where(colorIdentity=",".join(colorlist)) \
-                .where(types=typefilter)\
-                .where(set=setfilter)\
+                .where(types=typefilter) \
+                .where(set=setfilter) \
                 .where(rarity=rarityfilter) \
-                .where(pageSize=50)\
+                .where(pageSize=50) \
                 .where(page=1).all()
         except (URLError, HTTPError) as err:
             print("Error connecting to the internet")
