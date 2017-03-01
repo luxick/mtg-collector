@@ -1,13 +1,18 @@
+import json
 import os
+import pickle
+
 import gi
 import re
+
 import config
+import network
 gi.require_version('Gtk', '3.0')
 from gi.repository import GdkPixbuf, Gtk
 from PIL import Image as PImage
 from urllib import request
 from mtgsdk import Set
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 
 # Loacally stored images for faster loading times
 imagecache = []
@@ -20,12 +25,18 @@ status_bar = None
 
 
 def load_sets():
-    #setfile = os.open(config.cachepath + "/sets")
-    try:
-        sets = Set.all()
-    except URLError as err:
-        show_message("Connection Error", str(err.reason))
-        return
+    path = config.cachepath + "sets"
+    if not os.path.isfile(path):
+        # use mtgsdk api to retrieve al list of all sets
+        new_sets = network.net_load_sets()
+
+        if new_sets == "":
+            show_message("API Error", "Could not retrieve Set infos")
+            return
+        # Serialize the loaded data to a file
+        pickle.dump(new_sets, open(config.cachepath + "sets", 'wb'))
+    # Deserialize set data from local file
+    sets = pickle.load(open(config.cachepath + "sets", 'rb'))
     for set in sets:
         set_list.append(set)
 

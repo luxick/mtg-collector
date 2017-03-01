@@ -1,4 +1,4 @@
-from urllib.error import URLError
+from urllib.error import URLError, HTTPError
 
 import gi
 from gi.repository import Pango
@@ -235,7 +235,7 @@ class SearchView(Gtk.Grid):
                 .where(rarity=rarityfilter) \
                 .where(pageSize=50)\
                 .where(page=1).all()
-        except URLError as err:
+        except (URLError, HTTPError) as err:
             print("Error connecting to the internet")
             GObject.idle_add(util.show_message, "Connection Error", str(err.reason), priority=GObject.PRIORITY_DEFAULT)
             GObject.idle_add(self.do_activate_controls, True, priorty=GObject.PRIORITY_DEFAULT)
@@ -338,7 +338,7 @@ class SearchView(Gtk.Grid):
     def do_activate_controls(self, active):
         self.searchEntry.set_editable(active)
         self.searchEntry.set_sensitive(active)
-        #self.searchbutton.set_sensitive(active)
+        self.searchbutton.set_sensitive(active)
         self.red_mana_button.set_sensitive(active)
         self.blue_mana_button.set_sensitive(active)
         self.black_mana_button.set_sensitive(active)
