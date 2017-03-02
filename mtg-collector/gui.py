@@ -21,13 +21,36 @@ class MainWindow(Gtk.Window):
 
         util.load_sets()
 
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.add(vbox)
-        self.notebook = Gtk.Notebook()
-
-        vbox.pack_start(self.notebook, True, True, 0)
         self.status_bar = Gtk.Statusbar()
         self.status_bar.set_no_show_all(True)
+
+        self.notebook = Gtk.Notebook()
+
+        # region Menu Bar
+
+        mb_main = Gtk.Menu()
+
+        self.menu_import = Gtk.MenuItem("Import Library")
+        self.menu_export = Gtk.MenuItem("Export Library")
+        self.menu_quit = Gtk.ImageMenuItem('Quit', Gtk.Image.new_from_icon_name(Gtk.STOCK_QUIT, 0))
+        self.menu_quit.connect("activate", Gtk.main_quit)
+
+        mb_main.append(self.menu_import)
+        mb_main.append(self.menu_export)
+        mb_main.append(Gtk.SeparatorMenuItem())
+        mb_main.append(self.menu_quit)
+
+        root_menu_main = Gtk.MenuItem("Main")
+        root_menu_main.set_submenu(mb_main)
+
+        mb = Gtk.MenuBar()
+        mb.append(root_menu_main)
+
+        # endregion
+
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        vbox.pack_start(mb, False, False, 0)
+        vbox.pack_start(self.notebook, True, True, 0)
         vbox.pack_start(self.status_bar, False, False, 0)
 
         # Set reference to status bar in util
@@ -43,11 +66,12 @@ class MainWindow(Gtk.Window):
         self.deckView = Gtk.Box()
         self.deckView.add(Gtk.Label("View and organize your Decklists!"))
 
-
-
         self.notebook.append_page(self.searchView, Gtk.Label("Search"))
         self.notebook.append_page(self.collectionView, Gtk.Label("Collection"))
         self.notebook.append_page(self.deckView, Gtk.Label("Decks"))
+
+        self.add(vbox)
+
 
 win = MainWindow()
 win.connect('delete-event', Gtk.main_quit)

@@ -5,17 +5,19 @@ import threading
 import gi
 from urllib.error import URLError, HTTPError
 from mtgsdk import Card
-from gi.repository import Gtk, GdkPixbuf, GObject, Pango
+from gi.repository import Gtk, Gdk, GdkPixbuf, GObject, Pango
+
 gi.require_version('Gtk', '3.0')
 
 
-
 class SearchView(Gtk.Grid):
+
+    # region Constructor
     def __init__(self):
         Gtk.Grid.__init__(self)
         self.set_column_spacing(5)
 
-        # Search Box
+        # region Search Box
         self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5,
                                  margin_end=5, margin_start=5, margin_top=5, margin_bottom=5)
         self.searchEntry = Gtk.Entry()
@@ -33,8 +35,10 @@ class SearchView(Gtk.Grid):
         self.searchbox.add(self.searchbutton)
         self.searchbox.add(self.progressbar)
         self.searchbox.add(Gtk.HSeparator())
+        # endregion
 
-        # Filters
+        # region Filters
+
         # Color of the cards
         color_cooser_label = Gtk.Label("Mana Color", xalign=0, yalign=0)
 
@@ -128,8 +132,11 @@ class SearchView(Gtk.Grid):
                                margin_end=5, margin_start=5, margin_top=5, margin_bottom=5)
         self.filters.pack_start(self.filters_title, False, False, 5)
         self.filters.pack_start(self.filters_grid, False, False, 0)
+
+        # endregion
+
         # Set all Buttons active
-        self.do_init_filter_controls()
+        self._do_init_filter_controls()
 
         # Card List
         self.searchresults = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
@@ -190,16 +197,9 @@ class SearchView(Gtk.Grid):
         self.selection = self.list.get_selection()
         self.selection.connect("changed", self.on_card_selected)
 
-    def match_selected(self, completion, model, iter):
-        self.set_combo.set_active_iter(iter)
+    # endregion
 
-    def do_show_no_results(self, searchterm):
-        # Should move to main UI, so parent can be used
-        dialog = Gtk.MessageDialog(self.parent, 0, Gtk.MessageType.INFO,
-                                   Gtk.ButtonsType.OK, "No Results")
-        dialog.format_secondary_text("No cards with name \"" + searchterm + "\" were found")
-        dialog.run()
-        dialog.destroy()
+    # region UI Events
 
     def online_search_clicked(self, button):
         # Clear old data from liststore
@@ -212,6 +212,33 @@ class SearchView(Gtk.Grid):
         self.loadthread.setDaemon(True)
         # Start to load cards
         self.loadthread.start()
+
+    def mana_toggled(self, toggle_button):
+        iconname = ""
+        if toggle_button.get_active():
+            iconname = "{" + toggle_button.get_name() + "}"
+        else:
+            iconname = "{" + toggle_button.get_name() + "_alt}"
+        image = Gtk.Image()
+        image.set_from_pixbuf(util.create_mana_icons(iconname))
+        toggle_button.set_image(image)
+
+    def on_card_selected(self, selection):
+        (model, pathlist) = selection.get_selected_rows()
+        for path in pathlist:
+            iter = model.get_iter(path)
+            card_id = model.get_value(iter, 0)
+
+            selected_card = None
+            for card in self.cards:
+                if card.multiverse_id == card_id:
+                    selected_card = card
+            if selected_card is not None:
+                self.details.set_card_detail(selected_card)
+
+    # endregion
+
+    # region Public Functions
 
     def load_cards(self):
         # Get search term
@@ -301,39 +328,22 @@ class SearchView(Gtk.Grid):
         # Hide Progress bar
         GObject.idle_add(self.progressbar.set_visible, False, priorty=GObject.PRIORITY_DEFAULT)
 
-    def on_card_selected(self, selection):
-        (model, pathlist) = selection.get_selected_rows()
-        for path in pathlist:
-            iter = model.get_iter(path)
-            card_id = model.get_value(iter, 0)
+    # endregion
 
-            selected_card = None
-            for card in self.cards:
-                if card.multiverse_id == card_id:
-                    selected_card = card
-            if selected_card is not None:
-                self.details.set_card_detail(selected_card)
+    # region Private Functions
 
-    def get_color_filter(self):
-        colorlist = []
-        # Go through mana color buttons an get the active filters
-        for widget in self.color_chooser:
-            if isinstance(widget, Gtk.ToggleButton):
-                if widget.get_active():
-                    colorlist.append(widget.get_name())
-        return colorlist
+    def _match_selected(self, completion, model, iter):
+        self.set_combo.set_active_iter(iter)
 
-    def mana_toggled(self, toggle_button):
-        iconname = ""
-        if toggle_button.get_active():
-            iconname = "{" + toggle_button.get_name() + "}"
-        else:
-            iconname = "{" + toggle_button.get_name() + "_alt}"
-        image = Gtk.Image()
-        image.set_from_pixbuf(util.create_mana_icons(iconname))
-        toggle_button.set_image(image)
+    def _do_show_no_results(self, searchterm):
+        # Should move to main UI, so parent can be used
+        dialog = Gtk.MessageDialog(self.parent, 0, Gtk.MessageType.INFO,
+                                   Gtk.ButtonsType.OK, "No Results")
+        dialog.format_secondary_text("No cards with name \"" + searchterm + "\" were found")
+        dialog.run()
+        dialog.destroy()
 
-    def do_init_filter_controls(self):
+    def _do_init_filter_controls(self):
         # Toggle each Button to deactivate filter an load icon
         for widget in self.color_chooser:
             if isinstance(widget, Gtk.ToggleButton):
@@ -344,7 +354,7 @@ class SearchView(Gtk.Grid):
         self.type_combo.set_active(0)
         self.set_combo.set_active(0)
 
-    def do_activate_controls(self, active):
+    def _do_activate_controls(self, active):
         self.searchEntry.set_editable(active)
         self.searchEntry.set_sensitive(active)
         self.searchbutton.set_sensitive(active)
@@ -357,3 +367,16 @@ class SearchView(Gtk.Grid):
         self.rarity_combo.set_sensitive(active)
         self.type_combo.set_sensitive(active)
         self.set_combo.set_sensitive(active)
+
+        def _get_color_filter(self):
+            color_list = []
+            # Go through mana color buttons an get the active filters
+            for widget in self.color_chooser:
+                if isinstance(widget, Gtk.ToggleButton):
+                    if widget.get_active():
+                        color_list.append(widget.get_name())
+            return color_list
+
+    # endregion
+
+    pass
