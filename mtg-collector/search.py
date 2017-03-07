@@ -245,10 +245,10 @@ class SearchView(Gtk.Grid):
         term = self.searchEntry.get_text()
 
         # Lock down search controls
-        GObject.idle_add(self.do_activate_controls, False, priorty=GObject.PRIORITY_DEFAULT)
+        GObject.idle_add(self._do_activate_controls, False, priorty=GObject.PRIORITY_DEFAULT)
 
         # Get filter rules
-        colorlist = self.get_color_filter()
+        colorlist = self._get_color_filter()
         tree_iter = self.rarity_combo.get_active_iter()
         rarityfilter = self.rarity_store.get_value(tree_iter, 0)
 
@@ -274,7 +274,7 @@ class SearchView(Gtk.Grid):
         except (URLError, HTTPError) as err:
             print("Error connecting to the internet")
             GObject.idle_add(util.show_message, "Connection Error", str(err.reason), priority=GObject.PRIORITY_DEFAULT)
-            GObject.idle_add(self.do_activate_controls, True, priorty=GObject.PRIORITY_DEFAULT)
+            GObject.idle_add(self._do_activate_controls, True, priorty=GObject.PRIORITY_DEFAULT)
             return
 
         print("Done. Found " + str(len(self.cards)) + " cards")
@@ -282,7 +282,7 @@ class SearchView(Gtk.Grid):
             messagetext = "No cards with name \"" + term + "\" found"
             GObject.idle_add(util.show_message, "No Results", messagetext, priority=GObject.PRIORITY_DEFAULT)
             # Reactivate search controls
-            GObject.idle_add(self.do_activate_controls, True, priority=GObject.PRIORITY_DEFAULT)
+            GObject.idle_add(self._do_activate_controls, True, priority=GObject.PRIORITY_DEFAULT)
             return
 
         # Remove duplicate entries
@@ -323,7 +323,7 @@ class SearchView(Gtk.Grid):
         # Reload image cache to include new cards
         util.reload_image_cache()
         # Reactivate search controls
-        GObject.idle_add(self.do_activate_controls, True, priority=GObject.PRIORITY_DEFAULT)
+        GObject.idle_add(self._do_activate_controls, True, priority=GObject.PRIORITY_DEFAULT)
         GObject.idle_add(util.push_status, "", priorty=GObject.PRIORITY_DEFAULT)
         # Hide Progress bar
         GObject.idle_add(self.progressbar.set_visible, False, priorty=GObject.PRIORITY_DEFAULT)
@@ -368,14 +368,14 @@ class SearchView(Gtk.Grid):
         self.type_combo.set_sensitive(active)
         self.set_combo.set_sensitive(active)
 
-        def _get_color_filter(self):
-            color_list = []
-            # Go through mana color buttons an get the active filters
-            for widget in self.color_chooser:
-                if isinstance(widget, Gtk.ToggleButton):
-                    if widget.get_active():
-                        color_list.append(widget.get_name())
-            return color_list
+    def _get_color_filter(self):
+        color_list = []
+        # Go through mana color buttons an get the active filters
+        for widget in self.color_chooser:
+            if isinstance(widget, Gtk.ToggleButton):
+                if widget.get_active():
+                    color_list.append(widget.get_name())
+        return color_list
 
     # endregion
 
