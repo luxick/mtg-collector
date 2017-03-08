@@ -12,7 +12,7 @@ class DetailBar(Gtk.ScrolledWindow):
         self.add(self.grid)
         self.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
-        # Create area for big card an fill it with a dummy image
+        # Create area for big card
         self.image_area = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         self.bigcard = Gtk.Image()
         pixbuf = util.load_dummy_image(63 * 5, 88 * 5)
@@ -67,8 +67,6 @@ class DetailBar(Gtk.ScrolledWindow):
         self.rulesstore.clear()
 
     def set_card_detail(self, card):
-        print("Loading infos for \"" + card.name + "\"")
-
         self.update_big_card(card)
         self.rulesstore.clear()
         self.rulingslabel.set_visible(False)

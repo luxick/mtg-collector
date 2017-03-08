@@ -16,6 +16,7 @@ class SearchView(Gtk.Grid):
     def __init__(self):
         Gtk.Grid.__init__(self)
         self.set_column_spacing(5)
+        self.current_card = None
 
         # region Search Box
         self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5,
@@ -178,6 +179,12 @@ class SearchView(Gtk.Grid):
 
         # Detail View for selected Card
         self.details = details.DetailBar()
+
+        # Button to add to library
+        self.add_delete_button = Gtk.Button()
+        self.add_delete_button.set_no_show_all(True)
+        self.add_delete_button.connect("clicked", self.on_add_delete)
+
         # Bring it all together
         left_pane = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         left_pane.pack_start(self.searchbox, False, False, 0)
@@ -193,6 +200,8 @@ class SearchView(Gtk.Grid):
         self.attach(Gtk.VSeparator(), 3, 0, 1, 1)
         # Details
         self.attach(self.details, 4, 0, 1, 1)
+        # Add/delete Button
+        self.attach(self.add_delete_button, 4, 1, 1, 1)
 
         self.selection = self.list.get_selection()
         self.selection.connect("changed", self.on_card_selected)
@@ -201,11 +210,24 @@ class SearchView(Gtk.Grid):
 
     # region UI Events
 
+    def on_add_delete(self, button):
+        if util.library.__contains__(self.current_card.multiverse_id):
+            util.remove_card_from_lib(self.current_card)
+            print(self.current_card.name + " removed to library")
+        else:
+            util.add_card_to_lib(self.current_card)
+            print(self.current_card.name + " added to library")
+        self._do_update_add_button()
+
     def online_search_clicked(self, button):
         # Clear old data from liststore
         self.store.clear()
         # Reset details pane
         self.details.reset()
+        # Reset selected card
+        self.current_card = None
+        # Hide Add delete button
+        self.add_delete_button.set_visible(False)
         # Define the function to load cards in a seperate thread, so the UI is not blocked
         self.loadthread = threading.Thread(target=self.load_cards)
         # Deamonize Thread so it tops if the main thread exits
@@ -235,6 +257,10 @@ class SearchView(Gtk.Grid):
                     selected_card = card
             if selected_card is not None:
                 self.details.set_card_detail(selected_card)
+                self.current_card = selected_card
+
+                self.add_delete_button.set_visible(True)
+                self._do_update_add_button()
 
     # endregion
 
@@ -331,6 +357,14 @@ class SearchView(Gtk.Grid):
     # endregion
 
     # region Private Functions
+
+    def _do_update_add_button(self):
+        if not util.library.__contains__(self.current_card.multiverse_id):
+            self.add_delete_button.set_label("Add to Library")
+            self.add_delete_button.modify_bg(Gtk.StateType.NORMAL, config.green_color)
+        else:
+            self.add_delete_button.set_label("Remove from Library")
+            self.add_delete_button.modify_bg(Gtk.StateType.NORMAL, config.red_color)
 
     def _match_selected(self, completion, model, iter):
         self.set_combo.set_active_iter(iter)

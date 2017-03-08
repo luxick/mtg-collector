@@ -8,16 +8,67 @@ import network
 from gi.repository import GdkPixbuf, Gtk
 from PIL import Image as PImage
 from urllib import request
+from mtgsdk import Card
 gi.require_version('Gtk', '3.0')
 
 # Locally stored images for faster loading times
 imagecache = []
 manaicons = {}
 
+#Card library object
+library = {}
+
 set_list = []
 
 window = None
 status_bar = None
+
+
+def add_card_to_lib(card):
+    library[card.multiverse_id] = card
+
+
+def remove_card_from_lib(card):
+    del library[card.multiverse_id]
+
+
+def print_lib(menuItem):
+    print("Printing library:\n")
+    counter = 1
+    for card_id, card in library.items():
+        print(str(counter) + ": " + card.name + " (" + str(card_id) + ")")
+        counter += 1
+    print("\nDone.")
+
+
+def save_library():
+    if not os.path.exists(config.cache_path):
+        os.makedirs(config.cache_path)
+    path = config.cache_path + "library"
+    # Serialize library object using pickle
+    try:
+        pickle.dump(library, open(path, 'wb'))
+        push_status("Library saved.")
+        print("Library saved")
+    except:
+        show_message("Error", "Error while saving library to disk")
+
+
+def load_library():
+    path = config.cache_path + "library"
+    library.clear()
+    if os.path.isfile(path):
+        # Deserialize using pickle
+        try:
+            library_loaded = pickle.load(open(path, 'rb'))
+            for id, card in library_loaded.items():
+                library[id] = card
+            push_status("Library loaded.")
+        except :
+            show_message("Error", "Error while loading library from disk")
+    else:
+        save_library()
+        print("No library file found on disk, created new one")
 
 
 def load_sets():
@@ -29,9 +80,9 @@ def load_sets():
             show_message("API Error", "Could not retrieve Set infos")
             return
         # Serialize the loaded data to a file
-        pickle.dump(new_sets, open(config.cache_path + "sets", 'wb'))
+        pickle.dump(new_sets, open(path, 'wb'))
     # Deserialize set data from local file
-    sets = pickle.load(open(config.cache_path + "sets", 'rb'))
+    sets = pickle.load(open(path, 'rb'))
     # Sort the loaded sets based on the sets name
     for set in sorted(sets, key=lambda x: x.name):
         set_list.append(set)

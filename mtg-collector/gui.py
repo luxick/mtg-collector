@@ -13,6 +13,13 @@ class MainWindow(Gtk.Window):
         self.set_border_width(2)
         self.set_size_request(1000, 700)
 
+        self.status_bar = Gtk.Statusbar()
+        self.status_bar.set_no_show_all(True)
+
+        # Set reference to status bar in util
+        util.status_bar = self.status_bar
+        util.push_status("Application started")
+
         # Load local image Data
         util.reload_image_cache()
         util.load_mana_icons()
@@ -20,31 +27,53 @@ class MainWindow(Gtk.Window):
         util.window = self
 
         util.load_sets()
-
-        self.status_bar = Gtk.Statusbar()
-        self.status_bar.set_no_show_all(True)
+        util.load_library()
 
         self.notebook = Gtk.Notebook()
 
         # region Menu Bar
 
         mb_main = Gtk.Menu()
+        mb_lib = Gtk.Menu()
 
         self.menu_import = Gtk.MenuItem("Import Library")
         self.menu_export = Gtk.MenuItem("Export Library")
         self.menu_quit = Gtk.ImageMenuItem('Quit', Gtk.Image.new_from_icon_name(Gtk.STOCK_QUIT, 0))
         self.menu_quit.connect("activate", Gtk.main_quit)
 
+        self.lib_save = Gtk.ImageMenuItem("Save", Gtk.Image.new_from_icon_name(Gtk.STOCK_SAVE, 0))
+        self.lib_save.connect("activate", self.mb_save_lib)
+        self.lib_debug_print = Gtk.MenuItem("DEBUG: Print Library")
+        self.lib_debug_print.connect("activate", util.print_lib)
+
         mb_main.append(self.menu_import)
         mb_main.append(self.menu_export)
         mb_main.append(Gtk.SeparatorMenuItem())
         mb_main.append(self.menu_quit)
 
+        mb_lib.append(self.lib_save)
+        mb_lib.append(self.lib_debug_print)
+
         root_menu_main = Gtk.MenuItem("Main")
         root_menu_main.set_submenu(mb_main)
 
+        root_menu_lib = Gtk.MenuItem("Library")
+        root_menu_lib.set_submenu(mb_lib)
+
         mb = Gtk.MenuBar()
         mb.append(root_menu_main)
+        mb.append(root_menu_lib)
+
+        # endregion
+
+        # region Accelerators
+
+        accelgrp = Gtk.AccelGroup()
+
+        key, mod  = Gtk.accelerator_parse("<Control>Q")
+        self.menu_quit.add_accelerator("activate", accelgrp, key, mod, Gtk.AccelFlags.VISIBLE)
+
+        self.add_accel_group(accelgrp)
 
         # endregion
 
@@ -52,10 +81,6 @@ class MainWindow(Gtk.Window):
         vbox.pack_start(mb, False, False, 0)
         vbox.pack_start(self.notebook, True, True, 0)
         vbox.pack_start(self.status_bar, False, False, 0)
-
-        # Set reference to status bar in util
-        util.status_bar = self.status_bar
-        util.push_status("Application started")
 
         self.collectionView = Gtk.Box()
         self.collectionView.add(collection.CollectionView())
@@ -72,6 +97,8 @@ class MainWindow(Gtk.Window):
 
         self.add(vbox)
 
+    def mb_save_lib(self, menu_item):
+        util.save_library()
 
 win = MainWindow()
 win.connect('delete-event', Gtk.main_quit)
