@@ -12,11 +12,10 @@ gi.require_version('Gtk', '3.0')
 # Locally stored images for faster loading times
 imagecache = []
 manaicons = {}
+set_list = []
 
 # Card library object
 library = {}
-
-set_list = []
 
 window = None
 status_bar = None

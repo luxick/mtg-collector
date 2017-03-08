@@ -88,6 +88,7 @@ class SearchView(Gtk.Grid):
         self.set_store.append(["", "Any"])
         for set in util.set_list:
             self.set_store.append([set.code, set.name])
+
         self.set_combo = Gtk.ComboBox.new_with_model(self.set_store)
         self.set_combo.pack_start(renderer_text, True)
         self.set_combo.add_attribute(renderer_text, "text", 1)
@@ -96,9 +97,13 @@ class SearchView(Gtk.Grid):
         self.set_combo.set_hexpand(False)
 
         # Autocomplete search in Set Combobox
-        # completer = Gtk.EntryCompletion()
-        # completer.set_model(self.set_store)
-        # completer.set_text_column(1)
+        completer = Gtk.EntryCompletion()
+        completer.set_model(self.set_store)
+        completer.set_text_column(1)
+
+        self.set_entry = Gtk.Entry()
+        self.set_entry.set_completion(completer)
+
         # completer.connect("match-selected", self.match_selected)
         # self.set_combo.get_child().set_completion(completer)
 
@@ -124,7 +129,7 @@ class SearchView(Gtk.Grid):
         self.filters_grid.attach(self.type_combo, 1, 2, 1, 1)
 
         self.filters_grid.attach(set_label, 0, 3, 1, 1)
-        self.filters_grid.attach(self.set_combo, 1, 3, 1, 1)
+        self.filters_grid.attach(self.set_entry, 1, 3, 1, 1)
 
         self.filters_title = Gtk.Label(xalign=0, yalign=0)
         self.filters_title.set_markup("<big>Filter search results</big>")
@@ -283,8 +288,13 @@ class SearchView(Gtk.Grid):
         if typefilter == "Any":
             typefilter = ""
 
-        tree_iter = self.set_combo.get_active_iter()
-        setfilter = self.set_store.get_value(tree_iter, 0)
+        # tree_iter = self.set_combo.get_active_iter()
+        set_filter = ""
+        if not self.set_entry.get_text() == "":
+            for row in self.set_store:
+                if row[1] == self.set_entry.get_text():
+                    set_filter = row[0]
+
 
         # Load card info from internet
         print("\nStart online search")
@@ -293,7 +303,7 @@ class SearchView(Gtk.Grid):
             self.cards = Card.where(name=term) \
                 .where(colorIdentity=",".join(colorlist)) \
                 .where(types=typefilter) \
-                .where(set=setfilter) \
+                .where(set=set_filter) \
                 .where(rarity=rarityfilter) \
                 .where(pageSize=50) \
                 .where(page=1).all()
@@ -366,8 +376,8 @@ class SearchView(Gtk.Grid):
             self.add_delete_button.set_label("Remove from Library")
             self.add_delete_button.modify_bg(Gtk.StateType.NORMAL, config.red_color)
 
-    def _match_selected(self, completion, model, iter):
-        self.set_combo.set_active_iter(iter)
+    # def _match_selected(self, completion, model, iter):
+    #     self.set_combo.set_active_iter(iter)
 
     def _do_show_no_results(self, searchterm):
         # Should move to main UI, so parent can be used
@@ -386,7 +396,7 @@ class SearchView(Gtk.Grid):
         # Set default rarity and type filters to "Any"
         self.rarity_combo.set_active(0)
         self.type_combo.set_active(0)
-        self.set_combo.set_active(0)
+        #self.set_combo.set_active(0)
 
     def _do_activate_controls(self, active):
         self.searchEntry.set_editable(active)
@@ -400,7 +410,8 @@ class SearchView(Gtk.Grid):
         self.colorless_mana_button.set_sensitive(active)
         self.rarity_combo.set_sensitive(active)
         self.type_combo.set_sensitive(active)
-        self.set_combo.set_sensitive(active)
+        self.set_entry.set_sensitive(active)
+        self.set_entry.set_editable(active)
 
     def _get_color_filter(self):
         color_list = []
