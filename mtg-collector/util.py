@@ -1,21 +1,19 @@
 import os
-import pickle
 import gi
 import re
 import config
 import network
-
 from gi.repository import GdkPixbuf, Gtk
 from PIL import Image as PImage
 from urllib import request
-from mtgsdk import Card
+import six.moves.cPickle as pickle
 gi.require_version('Gtk', '3.0')
 
 # Locally stored images for faster loading times
 imagecache = []
 manaicons = {}
 
-#Card library object
+# Card library object
 library = {}
 
 set_list = []
@@ -31,7 +29,7 @@ def add_card_to_lib(card):
 def remove_card_from_lib(card):
     del library[card.multiverse_id]
 
-
+# Debug function for library
 def print_lib(menuItem):
     print("Printing library:\n")
     counter = 1
