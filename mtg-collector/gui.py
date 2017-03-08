@@ -70,8 +70,10 @@ class MainWindow(Gtk.Window):
 
         accelgrp = Gtk.AccelGroup()
 
-        key, mod  = Gtk.accelerator_parse("<Control>Q")
+        key, mod = Gtk.accelerator_parse("<Control>Q")
         self.menu_quit.add_accelerator("activate", accelgrp, key, mod, Gtk.AccelFlags.VISIBLE)
+        key, mod = Gtk.accelerator_parse("<Control>S")
+        self.lib_save.add_accelerator("activate", accelgrp, key, mod, Gtk.AccelFlags.VISIBLE)
 
         self.add_accel_group(accelgrp)
 
