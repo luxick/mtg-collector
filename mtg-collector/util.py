@@ -3,11 +3,12 @@ import gi
 import re
 import config
 import network
+gi.require_version('Gtk', '3.0')
 from gi.repository import GdkPixbuf, Gtk
 from PIL import Image as PImage
 from urllib import request
 import six.moves.cPickle as pickle
-gi.require_version('Gtk', '3.0')
+
 
 # Locally stored images for faster loading times
 imagecache = []

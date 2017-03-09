@@ -1,16 +1,21 @@
 import os
-
+import util
+import details
 import gi
 from psutil._compat import xrange
-
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf
 
 
-class CollectionView(Gtk.Grid):
+class LibraryView(Gtk.Grid):
     def __init__(self):
         Gtk.Grid.__init__(self)
+        self.set_column_spacing(5)
 
+        # Dictionary to keep link IDs in Flowbox to IDs of Cards
+        self.flowbox_ids = {}
+
+        # region Demo left bar
         # Search Box
         self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         self.searchEntry = Gtk.Entry()
@@ -28,46 +33,52 @@ class CollectionView(Gtk.Grid):
         self.testRow.add(hbox)
 
         self.filterBox.add(self.testRow)
+        # endregion
 
         # The Small Card Flow
         self.cardScroller = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
         self.cardScroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-
         self.cardFlow = Gtk.FlowBox()
         self.cardFlow.set_valign(Gtk.Align.START)
         self.cardFlow.set_max_children_per_line(50)
-        self.cardFlow.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.create_flowbox(self.cardFlow)
+        self.cardFlow.set_selection_mode(Gtk.SelectionMode.SINGLE)
+        self.cardFlow.connect("child-activated", self.card_clicked)
         self.cardScroller.add(self.cardFlow)
 
         # Detailed Card View
-        self.detailBox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        self.details = details.DetailBar()
 
-        # Big Picture of the selected Card
-        self.image_area = Gtk.Box()
-        self.bigCard = Gtk.Image()
-        self.pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_size(os.path.dirname(__file__) + '/resources/images/demo.jpg', 63 * 4, 88 * 4)
-        self.bigCard.set_from_pixbuf(self.pixbuf)
-        self.image_area.add(self.bigCard)
-        self.detailBox.add(self.image_area)
-
-        # Sta-ts and Details about the selected Card
-        self.stat_listbox = Gtk.ListBox()
-        self.stat_listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-        self.test_statrow = Gtk.ListBoxRow()
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
-        hbox.add(Gtk.Label("Detail about the selected Card goes here", xalign=0))
-        self.test_statrow.add(hbox)
-        self.stat_listbox.add(self.test_statrow)
-
-        self.detailBox.add(self.stat_listbox)
-
+        left_pane = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        left_pane.pack_start(self.searchbox, False, False, 0)
+        left_pane.pack_start(self.filterBox, False, False, 0)
 
         # Bring it all together
-        self.attach(self.searchbox, 0, 0, 1, 1)
-        self.attach(self.filterBox, 0, 1, 1, 1)
-        self.attach(self.cardScroller, 1, 0, 1, 2)
-        self.attach(self.detailBox, 2, 0, 1, 2)
+        self.attach(left_pane, 0, 0, 1, 1)
+        self.attach(Gtk.VSeparator(), 1, 0, 1, 1)
+        self.attach(self.cardScroller, 2, 0, 1, 1)
+        self.attach(Gtk.VSeparator(), 3, 0, 1, 1)
+        self.attach(self.details, 4, 0, 1, 1)
+
+        self.fill_flowbox()
+
+    def fill_flowbox(self):
+        id_counter = 0
+        for id, card in util.library.items():
+            image = Gtk.Image()
+            pixbuf = util.load_card_image(card, 63 * 2, 88 * 2)
+            image.set_from_pixbuf(pixbuf)
+
+            self.cardFlow.insert(image, id_counter)
+
+            self.flowbox_ids[id_counter] = card.multiverse_id
+            id_counter += 1
+
+    def card_clicked(self, flowbox, flowboxchild):
+        card_id = self.flowbox_ids[flowboxchild.get_index()]
+        card = util.library[card_id]
+
+        self.details.set_card_detail(card)
+
 
     def add_test_image(self):
         image = Gtk.Image()

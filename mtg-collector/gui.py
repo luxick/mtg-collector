@@ -1,5 +1,5 @@
 import gi
-import collection
+import library
 import search
 import config
 import util
@@ -84,18 +84,18 @@ class MainWindow(Gtk.Window):
         vbox.pack_start(self.notebook, True, True, 0)
         vbox.pack_start(self.status_bar, False, False, 0)
 
-        self.collectionView = Gtk.Box()
-        self.collectionView.add(collection.CollectionView())
+        self.library = Gtk.Box()
+        self.library.add(library.LibraryView())
 
-        self.searchView = Gtk.Box()
-        self.searchView.add(search.SearchView())
+        self.search = Gtk.Box()
+        self.search.add(search.SearchView())
 
-        self.deckView = Gtk.Box()
-        self.deckView.add(Gtk.Label("View and organize your Decklists!"))
+        self.decks = Gtk.Box()
+        self.decks.add(Gtk.Label("View and organize your Decklists!"))
 
-        self.notebook.append_page(self.searchView, Gtk.Label("Search"))
-        self.notebook.append_page(self.collectionView, Gtk.Label("Collection"))
-        self.notebook.append_page(self.deckView, Gtk.Label("Decks"))
+        self.notebook.append_page(self.search, Gtk.Label("Search"))
+        self.notebook.append_page(self.library, Gtk.Label("Library"))
+        self.notebook.append_page(self.decks, Gtk.Label("Decks"))
 
         self.add(vbox)
 
