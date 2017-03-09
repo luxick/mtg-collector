@@ -7,10 +7,10 @@ import util
 class DetailBar(Gtk.ScrolledWindow):
     def __init__(self):
         Gtk.ScrolledWindow.__init__(self)
-        self.grid = Gtk.Grid()
-        self.grid.set_row_spacing(10)
-        self.add(self.grid)
+        self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.add(self.box)
         self.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
+        self.set_no_show_all(True)
 
         # Create area for big card
         self.image_area = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -53,8 +53,18 @@ class DetailBar(Gtk.ScrolledWindow):
         self.carddetails.attach(self.rulingslabel, 0, 0, 1, 1)
         self.carddetails.attach(self.rulings, 0, 1, 1, 1)
 
-        self.grid.attach(self.image_area, 0, 0, 1, 1)
-        self.grid.attach(self.carddetails, 0, 1, 1, 1)
+        self.box.pack_start(self.image_area, False, False, 0)
+        self.box.pack_start(self.carddetails, False, False, 10)
+
+        self._init_sub_containers()
+
+    def _init_sub_containers(self):
+        self.box.set_visible(True)
+        self.bigcard.set_visible(True)
+        self.image_area.set_visible(True)
+        self.carddetails.set_visible(True)
+        self.rulings.set_visible(True)
+        self.rulingslabel.set_visible(True)
 
     def update_big_card(self, card):
         pixbuf = util.load_card_image(card, 63 * 5, 88 * 5)
@@ -65,11 +75,13 @@ class DetailBar(Gtk.ScrolledWindow):
         self.bigcard.set_from_pixbuf(pixbuf)
         self.rulingslabel.set_visible(False)
         self.rulesstore.clear()
+        self.set_visible(False)
 
     def set_card_detail(self, card):
         self.update_big_card(card)
         self.rulesstore.clear()
         self.rulingslabel.set_visible(False)
+        self.set_visible(True)
 
         if card.rulings is not None:
             self.rulingslabel.set_visible(True)
