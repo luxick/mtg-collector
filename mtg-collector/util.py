@@ -41,7 +41,7 @@ def export_library():
             pickle.dump(library, open(dialog.get_filename(), 'wb'))
         except:
             show_message("Error", "Error while saving library to disk")
-        push_status("Library exported to \"", dialog.get_filename() + "\"")
+        push_status("Library exported to \"" + dialog.get_filename() + "\"")
         print("Library exported to \"", dialog.get_filename() + "\"")
     dialog.destroy()
 
