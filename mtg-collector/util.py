@@ -11,7 +11,7 @@ import six.moves.cPickle as pickle
 
 
 # Locally stored images for faster loading times
-imagecache = []
+imagecache = {}
 manaicons = {}
 set_list = []
 
@@ -21,13 +21,20 @@ library = {}
 window = None
 status_bar = None
 
+unsaved_changes = False
+
 
 def add_card_to_lib(card):
     library[card.multiverse_id] = card
+    global unsaved_changes
+    unsaved_changes = True
 
 
 def remove_card_from_lib(card):
     del library[card.multiverse_id]
+    global unsaved_changes
+    unsaved_changes = True
+
 
 # Debug function for library
 def print_lib(menuItem):
@@ -46,6 +53,8 @@ def save_library():
     # Serialize library object using pickle
     try:
         pickle.dump(library, open(path, 'wb'))
+        global unsaved_changes
+        unsaved_changes = False
         push_status("Library saved.")
         print("Library saved")
     except:
@@ -120,8 +129,8 @@ def reload_image_cache():
     imagecache.clear()
     for image in imageslist:
         try:
-            img = PImage.open(config.image_cache_path + image)
-            imagecache.append(img)
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file(config.image_cache_path + image)
+            imagecache[image] = pixbuf
         except OSError as err:
             print("Error loading image: " + str(err))
 
@@ -137,20 +146,20 @@ def load_card_image_online(card, sizex, sizey):
         print("No Image URL provided")
         return load_dummy_image(sizex, sizey)
     filename = config.image_cache_path + card.multiverse_id.__str__() + ".PNG"
-    print("Loading image for " + card.name +  "from: " + url)
+    print("Loading image for " + card.name + "from: " + url)
     response = request.urlretrieve(url, filename)
+    reload_image_cache()
     return GdkPixbuf.Pixbuf.new_from_file_at_size(filename, sizex, sizey)
 
 
 def load_card_image(card, sizex, sizey):
     # Try loading from disk, if file exists
-    for image in imagecache:
-        filename = os.path.basename(image.filename)
-        if filename == card.multiverse_id.__str__() + ".PNG":
-            return GdkPixbuf.Pixbuf.new_from_file_at_size(image.filename, sizex, sizey)
-
-    # No file in local cache found
-    return load_card_image_online(card, sizex, sizey)
+    filename = str(card.multiverse_id) + ".PNG"
+    if imagecache.__contains__(filename):
+        pixbuf = imagecache[filename]
+        return pixbuf.scale_simple(sizex, sizey, GdkPixbuf.InterpType.BILINEAR)
+    else:
+        return load_card_image_online(card, sizex, sizey)
 
 
 def create_mana_icons(mana_string):

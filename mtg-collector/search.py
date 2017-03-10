@@ -167,7 +167,7 @@ class SearchView(Gtk.Grid):
         col_id.set_visible(False)
         col_image = Gtk.TreeViewColumn(title="Image", cell_renderer=image, pixbuf=1)
         col_image.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_name = Gtk.TreeViewColumn(title="Name", cell_renderer=title, text=2)
+        col_name = Gtk.TreeViewColumn(title="Card Name", cell_renderer=title, text=2)
         col_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
         col_text = Gtk.TreeViewColumn(title="Card Text", cell_renderer=info, text=3)
         col_text.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)

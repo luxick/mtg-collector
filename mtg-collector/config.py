@@ -1,10 +1,11 @@
-import os
 import gi
+import os
 gi.require_version('Gtk', '3.0')
+gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk
 
 # Title of the Program Window
-application_title= "MTG Collector (working title) v0.1"
+application_title = "MTG Collector (working title) v0.1"
 
 # Path of image cache
 cache_path= os.path.dirname(__file__) + "/.cache/"
@@ -15,4 +16,4 @@ green_color = Gdk.color_parse('#87ff89')
 red_color = Gdk.color_parse('#ff6d6d')
 
 # When True Search view will list a card multiple times for each set they appear in
-show_from_all_sets=False
+show_from_all_sets = False
