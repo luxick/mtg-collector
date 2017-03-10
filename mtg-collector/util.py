@@ -99,6 +99,14 @@ def push_status(msg):
     status_bar.push(0, msg)
 
 
+def show_question_dialog(title, message):
+    dialog = Gtk.MessageDialog(window, 0, Gtk.MessageType.QUESTION,
+                               Gtk.ButtonsType.YES_NO, title)
+    dialog.format_secondary_text(message)
+    response = dialog.run()
+    dialog.destroy
+    return response
+
 def show_message(title, message):
     dialog = Gtk.MessageDialog(window, 0, Gtk.MessageType.INFO,
                                Gtk.ButtonsType.OK, title)

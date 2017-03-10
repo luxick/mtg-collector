@@ -102,6 +102,14 @@ class MainWindow(Gtk.Window):
     def mb_save_lib(self, menu_item):
         util.save_library()
 
+    def do_delete_event(self, event):
+        if util.unsaved_changes:
+            response = util.show_question_dialog("Unsaved Changes", "You have unsaved changes in your library. "
+                                                                    "Save before exiting?")
+            if response == Gtk.ResponseType.YES:
+                util.save_library()
+
+
 win = MainWindow()
 win.connect('delete-event', Gtk.main_quit)
 GObject.threads_init()
