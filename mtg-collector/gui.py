@@ -37,14 +37,14 @@ class MainWindow(Gtk.Window):
         mb_lib = Gtk.Menu()
 
         self.menu_import = Gtk.MenuItem("Import Library")
+        self.menu_import.connect("activate", self.mb_import_lib)
         self.menu_export = Gtk.MenuItem("Export Library")
+        self.menu_export.connect("activate", self.mb_export_lib)
         self.menu_quit = Gtk.ImageMenuItem('Quit', Gtk.Image.new_from_icon_name(Gtk.STOCK_QUIT, 0))
         self.menu_quit.connect("activate", Gtk.main_quit)
 
         self.lib_save = Gtk.ImageMenuItem("Save", Gtk.Image.new_from_icon_name(Gtk.STOCK_SAVE, 0))
         self.lib_save.connect("activate", self.mb_save_lib)
-        self.lib_debug_print = Gtk.MenuItem("DEBUG: Print Library")
-        self.lib_debug_print.connect("activate", util.print_lib)
 
         mb_main.append(self.menu_import)
         mb_main.append(self.menu_export)
@@ -52,7 +52,6 @@ class MainWindow(Gtk.Window):
         mb_main.append(self.menu_quit)
 
         mb_lib.append(self.lib_save)
-        mb_lib.append(self.lib_debug_print)
 
         root_menu_main = Gtk.MenuItem("Main")
         root_menu_main.set_submenu(mb_main)
@@ -98,6 +97,12 @@ class MainWindow(Gtk.Window):
         self.notebook.append_page(self.decks, Gtk.Label("Decks"))
 
         self.add(vbox)
+
+    def mb_export_lib(self, menu_item):
+        util.export_library()
+
+    def mb_import_lib(self, menu_item):
+        print("Import Library")
 
     def mb_save_lib(self, menu_item):
         util.save_library()

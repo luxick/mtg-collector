@@ -1,4 +1,6 @@
 import os
+
+import datetime
 import gi
 import re
 import config
@@ -23,27 +25,25 @@ status_bar = None
 
 unsaved_changes = False
 
-
-def add_card_to_lib(card):
-    library[card.multiverse_id] = card
-    global unsaved_changes
-    unsaved_changes = True
+# region File Access
 
 
-def remove_card_from_lib(card):
-    del library[card.multiverse_id]
-    global unsaved_changes
-    unsaved_changes = True
-
-
-# Debug function for library
-def print_lib(menuItem):
-    print("Printing library:\n")
-    counter = 1
-    for card_id, card in library.items():
-        print(str(counter) + ": " + card.name + " (" + str(card_id) + ")")
-        counter += 1
-    print("\nDone.")
+def export_library():
+    dialog = Gtk.FileChooserDialog("Export Library", window,
+                                   Gtk.FileChooserAction.SAVE,
+                                   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                    Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+    dialog.set_current_name("mtg_export-" + datetime.datetime.now().strftime("%Y-%m-%d"))
+    dialog.set_current_folder(os.path.expanduser("~"))
+    response = dialog.run()
+    if response == Gtk.ResponseType.OK:
+        try:
+            pickle.dump(library, open(dialog.get_filename(), 'wb'))
+        except:
+            show_message("Error", "Error while saving library to disk")
+        push_status("Library exported to " + dialog.get_filename())
+        print("Library exported to ", dialog.get_filename())
+    dialog.destroy()
 
 
 def save_library():
@@ -95,6 +95,34 @@ def load_sets():
         set_list.append(set)
 
 
+def reload_image_cache():
+    if not os.path.exists(config.image_cache_path):
+        os.makedirs(config.image_cache_path)
+
+    # return array of images
+    imageslist = os.listdir(config.image_cache_path)
+    imagecache.clear()
+    for image in imageslist:
+        try:
+            pixbuf = GdkPixbuf.Pixbuf.new_from_file(config.image_cache_path + image)
+            imagecache[image] = pixbuf
+        except OSError as err:
+            print("Error loading image: " + str(err))
+
+# endregion
+
+def add_card_to_lib(card):
+    library[card.multiverse_id] = card
+    global unsaved_changes
+    unsaved_changes = True
+
+
+def remove_card_from_lib(card):
+    del library[card.multiverse_id]
+    global unsaved_changes
+    unsaved_changes = True
+
+
 def push_status(msg):
     status_bar.push(0, msg)
 
@@ -126,21 +154,6 @@ def load_mana_icons():
     for image in imagelist:
         img = PImage.open(path + image)
         manaicons[os.path.splitext(image)[0]] = img
-
-
-def reload_image_cache():
-    if not os.path.exists(config.image_cache_path):
-        os.makedirs(config.image_cache_path)
-
-    # return array of images
-    imageslist = os.listdir(config.image_cache_path)
-    imagecache.clear()
-    for image in imageslist:
-        try:
-            pixbuf = GdkPixbuf.Pixbuf.new_from_file(config.image_cache_path + image)
-            imagecache[image] = pixbuf
-        except OSError as err:
-            print("Error loading image: " + str(err))
 
 
 def load_dummy_image(sizex, sizey):
