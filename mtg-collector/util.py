@@ -41,10 +41,36 @@ def export_library():
             pickle.dump(library, open(dialog.get_filename(), 'wb'))
         except:
             show_message("Error", "Error while saving library to disk")
-        push_status("Library exported to " + dialog.get_filename())
-        print("Library exported to ", dialog.get_filename())
+        push_status("Library exported to \"", dialog.get_filename() + "\"")
+        print("Library exported to \"", dialog.get_filename() + "\"")
     dialog.destroy()
 
+
+def import_library():
+    dialog = Gtk.FileChooserDialog("Import Library", window,
+                                   Gtk.FileChooserAction.OPEN,
+                                   (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
+                                    Gtk.STOCK_OPEN, Gtk.ResponseType.OK))
+    dialog.set_current_folder(os.path.expanduser("~"))
+    response = dialog.run()
+    if response == Gtk.ResponseType.OK:
+        override_question = show_question_dialog("Import Library",
+                                                 "Importing a library will override your current library. "
+                                                 "Proceed?")
+        if override_question == Gtk.ResponseType.YES:
+            imported = None
+            # try:
+            imported = pickle.load(open(dialog.get_filename(), 'rb'))
+            # except:
+
+            library.clear()
+            for id, card in imported.items():
+                library[id] = card
+            save_library()
+
+            push_status("Library imported")
+            print("Library imported")
+    dialog.destroy()
 
 def save_library():
     if not os.path.exists(config.cache_path):
@@ -111,6 +137,7 @@ def reload_image_cache():
 
 # endregion
 
+
 def add_card_to_lib(card):
     library[card.multiverse_id] = card
     global unsaved_changes
@@ -132,7 +159,7 @@ def show_question_dialog(title, message):
                                Gtk.ButtonsType.YES_NO, title)
     dialog.format_secondary_text(message)
     response = dialog.run()
-    dialog.destroy
+    dialog.destroy()
     return response
 
 def show_message(title, message):

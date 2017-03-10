@@ -127,7 +127,7 @@ class LibraryView(Gtk.Grid):
             iter = model.get_iter(path)
             card_id = model.get_value(iter, 0)
 
-        if not card_id is None:
+        if not card_id is None and util.library.__contains__(card_id):
             selected_card = util.library[card_id]
 
             if not selected_card is None:
@@ -158,4 +158,5 @@ class LibraryView(Gtk.Grid):
 
     def remove_button_clicked(self, button):
         util.remove_card_from_lib(self.current_card)
+        # Reset selection in list
         self.fill_lib_list()

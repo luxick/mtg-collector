@@ -14,7 +14,7 @@ class MainWindow(Gtk.Window):
         self.set_size_request(1000, 700)
 
         self.status_bar = Gtk.Statusbar()
-        self.status_bar.set_no_show_all(True)
+        self.status_bar.set_no_show_all(False)
 
         # Set reference to status bar in util
         util.status_bar = self.status_bar
@@ -83,8 +83,8 @@ class MainWindow(Gtk.Window):
         vbox.pack_start(self.notebook, True, True, 0)
         vbox.pack_start(self.status_bar, False, False, 0)
 
-        self.library = Gtk.Box()
-        self.library.add(library.LibraryView())
+        self.library = library.LibraryView()
+        # self.library.add(library.LibraryView())
 
         self.search = Gtk.Box()
         self.search.add(search.SearchView())
@@ -102,7 +102,8 @@ class MainWindow(Gtk.Window):
         util.export_library()
 
     def mb_import_lib(self, menu_item):
-        print("Import Library")
+        util.import_library()
+        self.library.fill_lib_list()
 
     def mb_save_lib(self, menu_item):
         util.save_library()
