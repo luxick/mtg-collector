@@ -4,11 +4,11 @@ A desktop application for building and organizing MTG card libraries and decks.
 ## Features
 
 * Online card search
+* Create a library of owned cards
 
 ## Roadmap
 
-* Build collection of cards
-* Organize cards in collection
+* Organize cards in library
 * Build decklists from cards in collection
 * Want lists
 * Full offline functionality
