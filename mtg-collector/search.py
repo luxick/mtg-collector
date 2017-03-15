@@ -292,13 +292,11 @@ class SearchView(Gtk.Grid):
         if typefilter == "Any":
             typefilter = ""
 
-        # tree_iter = self.set_combo.get_active_iter()
         set_filter = ""
         if not self.set_entry.get_text() == "":
             for row in self.set_store:
                 if row[1] == self.set_entry.get_text():
                     set_filter = row[0]
-
 
         # Load card info from internet
         print("\nStart online search")
@@ -323,6 +321,7 @@ class SearchView(Gtk.Grid):
             GObject.idle_add(util.show_message, "No Results", messagetext, priority=GObject.PRIORITY_DEFAULT)
             # Reactivate search controls
             GObject.idle_add(self._do_activate_controls, True, priority=GObject.PRIORITY_DEFAULT)
+            GObject.idle_add(self.searchEntry.grab_focus, priority=GObject.PRIORITY_DEFAULT)
             return
 
         # Remove duplicate entries
@@ -399,7 +398,6 @@ class SearchView(Gtk.Grid):
         # Set default rarity and type filters to "Any"
         self.rarity_combo.set_active(0)
         self.type_combo.set_active(0)
-        #self.set_combo.set_active(0)
 
     def _do_activate_controls(self, active):
         self.searchEntry.set_editable(active)

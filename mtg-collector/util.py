@@ -72,6 +72,7 @@ def import_library():
             print("Library imported")
     dialog.destroy()
 
+
 def save_library():
     if not os.path.exists(config.cache_path):
         os.makedirs(config.cache_path)
@@ -223,7 +224,7 @@ def create_mana_icons(mana_string):
     # Go through all entries an add the correspondent icon to the final image
     for icon in list:
         xpos = poscounter * 105
-        loaded = manaicons.get(icon)
+        loaded = manaicons.get(icon.replace("/", ""))
         if loaded is None:
             print("ERROR: No icon file named \"" + icon + "\" found.")
         else:
