@@ -147,7 +147,7 @@ class SearchView(Gtk.Grid):
         self.searchresults = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
         self.searchresults.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
 
-        self.store = Gtk.ListStore(int, GdkPixbuf.Pixbuf, str, str, GdkPixbuf.Pixbuf)
+        self.store = Gtk.ListStore(int, str, str, GdkPixbuf.Pixbuf)
         self.list = Gtk.TreeView(self.store)
         self.list.set_rules_hint(True)
         self.searchresults.add(self.list)
@@ -163,20 +163,21 @@ class SearchView(Gtk.Grid):
         info.set_padding(5, 5)
 
         index = Gtk.CellRendererText()
+
         col_id = Gtk.TreeViewColumn(title=index, cell_renderer=index, text=0)
         col_id.set_visible(False)
-        col_image = Gtk.TreeViewColumn(title="Image", cell_renderer=image, pixbuf=1)
-        col_image.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_name = Gtk.TreeViewColumn(title="Card Name", cell_renderer=title, text=2)
+        # col_image = Gtk.TreeViewColumn(title="Image", cell_renderer=image, pixbuf=1)
+        # col_image.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
+        col_name = Gtk.TreeViewColumn(title="Card Name", cell_renderer=title, text=1)
         col_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_text = Gtk.TreeViewColumn(title="Card Text", cell_renderer=info, text=3)
+        col_text = Gtk.TreeViewColumn(title="Card Text", cell_renderer=info, text=2)
         col_text.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
         col_text.set_resizable(True)
         col_text.set_expand(True)
-        col_mana = Gtk.TreeViewColumn(title="Mana Cost", cell_renderer=image, pixbuf=4)
+        col_mana = Gtk.TreeViewColumn(title="Mana Cost", cell_renderer=image, pixbuf=3)
         col_mana.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
 
-        self.list.append_column(col_image)
+        # self.list.append_column(col_image)
         self.list.append_column(col_name)
         self.list.append_column(col_text)
         self.list.append_column(col_mana)
@@ -347,7 +348,6 @@ class SearchView(Gtk.Grid):
         for card in self.cards:
             if card.multiverse_id is not None:
                 self.store.append([card.multiverse_id,
-                                   util.load_card_image(card, 63 * 2, 88 * 2),
                                    card.name,
                                    card.original_text,
                                    util.create_mana_icons(card.mana_cost)])

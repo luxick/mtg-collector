@@ -32,15 +32,6 @@ class LibraryView(Gtk.Grid):
         self.filterBox.add(self.testRow)
         # endregion
 
-        # The Small Card Flow
-        # self.cardScroller = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
-        # self.cardScroller.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        # self.cardFlow = Gtk.FlowBox()
-        # self.cardFlow.set_valign(Gtk.Align.START)
-        # self.cardFlow.set_max_children_per_line(50)
-        # self.cardFlow.set_selection_mode(Gtk.SelectionMode.SINGLE)
-        # self.cardFlow.connect("child-activated", self.card_clicked)
-        # self.cardScroller.add(self.cardFlow)
 
         # 0=ID, 1=Name, 2=Types, 3=Rarity, 4=Mana, 5=CMC(for sorting),
         self.store = Gtk.ListStore(int, str, str, str, GdkPixbuf.Pixbuf, int)
