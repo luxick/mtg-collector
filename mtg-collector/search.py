@@ -195,6 +195,12 @@ class SearchView(Gtk.Grid):
         left_pane.pack_start(self.searchbox, False, False, 0)
         left_pane.pack_start(self.filters, False, False, 0)
         left_pane.set_hexpand(False)
+
+        right_pane = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        right_pane.pack_start(self.details, True, True, 0)
+        right_pane.pack_start(Gtk.VSeparator(), False, False, 2)
+        right_pane.pack_start(self.add_delete_button, False, False, 2)
+
         # Search
         self.attach(left_pane, 0, 0, 1, 1)
         # Separator
@@ -203,10 +209,8 @@ class SearchView(Gtk.Grid):
         self.attach(self.searchresults, 2, 0, 1, 1)
         # Separator
         self.attach(Gtk.VSeparator(), 3, 0, 1, 1)
-        # Details
-        self.attach(self.details, 4, 0, 1, 1)
-        # Add/delete Button
-        self.attach(self.add_delete_button, 4, 1, 1, 1)
+        # Details and Add/Remove Button
+        self.attach(right_pane, 4, 0, 1, 1)
 
         self.selection = self.list.get_selection()
         self.selection.connect("changed", self.on_card_selected)
