@@ -1,6 +1,7 @@
 import config
 import util
 import details
+import cardlist
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf
@@ -32,54 +33,8 @@ class LibraryView(Gtk.Grid):
         self.filterBox.add(self.testRow)
         # endregion
 
-
-        # 0=ID, 1=Name, 2=Types, 3=Rarity, 4=Mana, 5=CMC(for sorting),
-        self.store = Gtk.ListStore(int, str, str, str, GdkPixbuf.Pixbuf, int)
-        self.lib_tree = Gtk.TreeView(self.store)
-        self.lib_tree.set_rules_hint(True)
-
-        self.lib_list = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
-        self.lib_list.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-        self.lib_list.add(self.lib_tree)
-
-        # region List Definitions
-
-        renderer = Gtk.CellRendererText()
-        image_renderer = Gtk.CellRendererPixbuf()
-
-        col_id = Gtk.TreeViewColumn(title="Multiverse ID", cell_renderer=renderer, text= 0)
-        col_id.set_visible(False)
-
-        col_title = Gtk.TreeViewColumn(title="Card Name", cell_renderer=renderer, text= 1)
-        col_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_title.set_sort_column_id(1)
-
-        col_types = Gtk.TreeViewColumn(title="Card Types", cell_renderer=renderer, text=2)
-        col_types.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_types.set_sort_column_id(2)
-
-        col_rarity = Gtk.TreeViewColumn(title="Rarity", cell_renderer=renderer, text=3)
-        col_rarity.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_rarity.set_sort_column_id(3)
-
-        col_mana = Gtk.TreeViewColumn(title="Mana Cost", cell_renderer=image_renderer, pixbuf=4)
-        col_mana.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_mana.set_sort_column_id(5)
-
-        col_cmc = Gtk.TreeViewColumn(title="CMC", cell_renderer=renderer, text=5)
-        col_cmc.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_cmc.set_visible(False)
-
-        self.lib_tree.append_column(col_id)
-        self.lib_tree.append_column(col_title)
-        self.lib_tree.append_column(col_types)
-        self.lib_tree.append_column(col_rarity)
-        self.lib_tree.append_column(col_mana)
-        self.lib_tree.append_column(col_cmc)
-
-        self.selection = self.lib_tree.get_selection()
-        self.selection.connect("changed", self.on_card_selected)
-        # endregion
+        self.lib_list = cardlist.CardList()
+        self.lib_list.selection.connect("changed", self.on_card_selected)
 
         # Detailed Card View
         self.details = details.DetailBar()
@@ -127,17 +82,25 @@ class LibraryView(Gtk.Grid):
                 self.remove_button.set_visible(True)
 
     def fill_lib_list(self):
-        self.store.clear()
+        self.lib_list.store.clear()
         self.details.reset()
         self.current_card = None
         self.remove_button.set_visible(False)
 
         for id, card in util.library.items():
-            self.store.append([id, card.name,
-                               " ".join(card.types),
-                               card.rarity,
-                               util.create_mana_icons(card.mana_cost),
-                               card.cmc])
+            if card.supertypes is None:
+                card.supertypes = ""
+            self.lib_list.store.append([
+                id,
+                card.name,
+                " ".join(card.supertypes),
+                " ".join(card.types),
+                card.rarity,
+                card.power,
+                card.toughness,
+                ", ".join(card.printings),
+                util.create_mana_icons(card.mana_cost),
+                card.cmc])
 
     def card_clicked(self, flowbox, flowboxchild):
         card_id = self.flowbox_ids[flowboxchild.get_index()]

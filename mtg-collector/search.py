@@ -1,3 +1,4 @@
+import cardlist
 import util
 import details
 import config
@@ -144,43 +145,8 @@ class SearchView(Gtk.Grid):
         self._do_init_filter_controls()
 
         # Card List
-        self.searchresults = Gtk.ScrolledWindow(hexpand=True, vexpand=True)
-        self.searchresults.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
-
-        self.store = Gtk.ListStore(int, str, str, GdkPixbuf.Pixbuf)
-        self.list = Gtk.TreeView(self.store)
-        self.list.set_rules_hint(True)
-        self.searchresults.add(self.list)
-
-        image = Gtk.CellRendererPixbuf()
-
-        title = Gtk.CellRendererText(xalign=0.5)
-        title.set_padding(5, 5)
-
-        info = Gtk.CellRendererText()
-        info.set_property("wrap-mode", Pango.WrapMode.WORD)
-        info.set_property("wrap-width", 100)
-        info.set_padding(5, 5)
-
-        index = Gtk.CellRendererText()
-
-        col_id = Gtk.TreeViewColumn(title=index, cell_renderer=index, text=0)
-        col_id.set_visible(False)
-        # col_image = Gtk.TreeViewColumn(title="Image", cell_renderer=image, pixbuf=1)
-        # col_image.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_name = Gtk.TreeViewColumn(title="Card Name", cell_renderer=title, text=1)
-        col_name.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_text = Gtk.TreeViewColumn(title="Card Text", cell_renderer=info, text=2)
-        col_text.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_text.set_resizable(True)
-        col_text.set_expand(True)
-        col_mana = Gtk.TreeViewColumn(title="Mana Cost", cell_renderer=image, pixbuf=3)
-        col_mana.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-
-        # self.list.append_column(col_image)
-        self.list.append_column(col_name)
-        self.list.append_column(col_text)
-        self.list.append_column(col_mana)
+        self.search_results = cardlist.CardList()
+        self.search_results.selection.connect("changed", self.on_card_selected)
 
         # Detail View for selected Card
         self.details = details.DetailBar()
@@ -206,14 +172,11 @@ class SearchView(Gtk.Grid):
         # Separator
         self.attach(Gtk.VSeparator(), 1, 0, 1, 1)
         # List
-        self.attach(self.searchresults, 2, 0, 1, 1)
+        self.attach(self.search_results, 2, 0, 1, 1)
         # Separator
         self.attach(Gtk.VSeparator(), 3, 0, 1, 1)
         # Details and Add/Remove Button
         self.attach(right_pane, 4, 0, 1, 1)
-
-        self.selection = self.list.get_selection()
-        self.selection.connect("changed", self.on_card_selected)
 
     # endregion
 
@@ -230,7 +193,7 @@ class SearchView(Gtk.Grid):
 
     def online_search_clicked(self, button):
         # Clear old data from liststore
-        self.store.clear()
+        self.search_results.store.clear()
         # Reset details pane
         self.details.reset()
         # Reset selected card
@@ -278,20 +241,16 @@ class SearchView(Gtk.Grid):
     def load_cards(self):
         # Get search term
         term = self.searchEntry.get_text()
-
         # Lock down search controls
         GObject.idle_add(self._do_activate_controls, False, priorty=GObject.PRIORITY_DEFAULT)
-
         # Get filter rules
         colorlist = self._get_color_filter()
         tree_iter = self.rarity_combo.get_active_iter()
         rarityfilter = self.rarity_store.get_value(tree_iter, 0)
-
         tree_iter = self.type_combo.get_active_iter()
         typefilter = self.type_store.get_value(tree_iter, 0)
         if typefilter == "Any":
             typefilter = ""
-
         set_filter = ""
         if not self.set_entry.get_text() == "":
             for row in self.set_store:
@@ -345,15 +304,23 @@ class SearchView(Gtk.Grid):
         progress = 0.0
         GObject.idle_add(self.progressbar.set_visible, True, priorty=GObject.PRIORITY_DEFAULT)
         GObject.idle_add(self.progressbar.set_fraction, 0.0, priorty=GObject.PRIORITY_DEFAULT)
-
         GObject.idle_add(util.push_status, "Loading cards...", priorty=GObject.PRIORITY_DEFAULT)
 
         for card in self.cards:
             if card.multiverse_id is not None:
-                self.store.append([card.multiverse_id,
-                                   card.name,
-                                   card.original_text,
-                                   util.create_mana_icons(card.mana_cost)])
+                if card.supertypes is None:
+                    card.supertypes = ""
+                self.search_results.store.append([
+                    card.multiverse_id,
+                    card.name,
+                    " ".join(card.supertypes),
+                    " ".join(card.types),
+                    card.rarity,
+                    card.power,
+                    card.toughness,
+                    ", ".join(card.printings),
+                    util.create_mana_icons(card.mana_cost),
+                    card.cmc])
             # update progress bar
             progress += loadprogress_step
             GObject.idle_add(self.progressbar.set_fraction, progress, priorty=GObject.PRIORITY_DEFAULT)
