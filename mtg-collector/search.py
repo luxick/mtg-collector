@@ -378,9 +378,6 @@ class SearchView(Gtk.Grid):
             self.add_delete_button.set_label("Remove from Library")
             self.add_delete_button.modify_bg(Gtk.StateType.NORMAL, config.red_color)
 
-    # def _match_selected(self, completion, model, iter):
-    #     self.set_combo.set_active_iter(iter)
-
     def _do_show_no_results(self, searchterm):
         # Should move to main UI, so parent can be used
         dialog = Gtk.MessageDialog(self.parent, 0, Gtk.MessageType.INFO,

@@ -141,12 +141,14 @@ def reload_image_cache():
 
 def add_card_to_lib(card):
     library[card.multiverse_id] = card
+    push_status(card.name + " added to library")
     global unsaved_changes
     unsaved_changes = True
 
 
 def remove_card_from_lib(card):
     del library[card.multiverse_id]
+    push_status(card.name + " removed from library")
     global unsaved_changes
     unsaved_changes = True
 
@@ -162,6 +164,7 @@ def show_question_dialog(title, message):
     response = dialog.run()
     dialog.destroy()
     return response
+
 
 def show_message(title, message):
     dialog = Gtk.MessageDialog(window, 0, Gtk.MessageType.INFO,
@@ -196,7 +199,7 @@ def load_card_image_online(card, sizex, sizey):
         return load_dummy_image(sizex, sizey)
     filename = config.image_cache_path + card.multiverse_id.__str__() + ".PNG"
     print("Loading image for " + card.name + "from: " + url)
-    response = request.urlretrieve(url, filename)
+    request.urlretrieve(url, filename)
     reload_image_cache()
     return GdkPixbuf.Pixbuf.new_from_file_at_size(filename, sizex, sizey)
 

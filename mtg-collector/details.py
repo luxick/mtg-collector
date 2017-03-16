@@ -1,6 +1,7 @@
+import threading
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, Pango
+from gi.repository import Gtk, Pango, GObject
 import util
 
 
@@ -8,17 +9,23 @@ class DetailBar(Gtk.ScrolledWindow):
     def __init__(self):
         Gtk.ScrolledWindow.__init__(self)
         self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.current_card = None
+
         self.add(self.box)
         self.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         self.set_no_show_all(True)
 
         # Create area for big card
-        self.image_area = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        self.image_area = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         self.bigcard = Gtk.Image()
         pixbuf = util.load_dummy_image(63 * 5, 88 * 5)
         self.bigcard.set_from_pixbuf(pixbuf)
-        self.image_area.add(self.bigcard)
-        self.image_area.add(Gtk.HSeparator())
+        self.load_spinner = Gtk.Spinner()
+        self.load_spinner.set_visible(False)
+        self.load_label = Gtk.Label("Loading image")
+        self.image_area.pack_start(self.bigcard, True, True, 2)
+        self.image_area.pack_start(self.load_spinner, True, True, 50)
+        self.image_area.pack_start(self.load_label, False, False, 0)
 
         # Build the additional info pane
         self.carddetails = Gtk.Grid()
@@ -66,11 +73,28 @@ class DetailBar(Gtk.ScrolledWindow):
         self.rulings.set_visible(True)
         self.rulingslabel.set_visible(True)
 
+    def set_load_animation(self, state):
+        self.bigcard.set_visible(not state)
+        self.load_spinner.set_visible(state)
+        self.load_label.set_visible(state)
+
+        if state:
+            self.load_spinner.start()
+        else:
+            self.load_spinner.stop()
+
     def update_big_card(self, card):
+        GObject.idle_add(self.set_load_animation, True, priorty = GObject.PRIORITY_DEFAULT)
+
         pixbuf = util.load_card_image(card, 63 * 5, 88 * 5)
-        self.bigcard.set_from_pixbuf(pixbuf)
+        if not self.current_card is card:
+            return
+
+        GObject.idle_add(self.bigcard.set_from_pixbuf, pixbuf, priorty=GObject.PRIORITY_DEFAULT)
+        GObject.idle_add(self.set_load_animation, False, priorty=GObject.PRIORITY_DEFAULT)
 
     def reset(self):
+        self.current_card = None
         pixbuf = util.load_dummy_image(63 * 5, 88 * 5)
         self.bigcard.set_from_pixbuf(pixbuf)
         self.rulingslabel.set_visible(False)
@@ -78,7 +102,11 @@ class DetailBar(Gtk.ScrolledWindow):
         self.set_visible(False)
 
     def set_card_detail(self, card):
-        self.update_big_card(card)
+        self.current_card = card
+        load_thread = threading.Thread(target=self.update_big_card, args=(card,))
+        load_thread.setDaemon(True)
+        load_thread.start()
+
         self.rulesstore.clear()
         self.rulingslabel.set_visible(False)
         self.set_visible(True)
@@ -87,3 +115,4 @@ class DetailBar(Gtk.ScrolledWindow):
             self.rulingslabel.set_visible(True)
             for rule in card.rulings:
                 self.rulesstore.append([rule.get('date'), rule.get('text')])
+
