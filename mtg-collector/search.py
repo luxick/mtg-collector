@@ -320,7 +320,8 @@ class SearchView(Gtk.Grid):
                     card.toughness,
                     ", ".join(card.printings),
                     util.create_mana_icons(card.mana_cost),
-                    card.cmc])
+                    card.cmc,
+                    card.set_name])
             # update progress bar
             progress += loadprogress_step
             GObject.idle_add(self.progressbar.set_fraction, progress, priorty=GObject.PRIORITY_DEFAULT)

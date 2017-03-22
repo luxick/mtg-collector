@@ -100,7 +100,8 @@ class LibraryView(Gtk.Grid):
                 card.toughness,
                 ", ".join(card.printings),
                 util.create_mana_icons(card.mana_cost),
-                card.cmc])
+                card.cmc,
+                card.set_name])
 
     def card_clicked(self, flowbox, flowboxchild):
         card_id = self.flowbox_ids[flowboxchild.get_index()]

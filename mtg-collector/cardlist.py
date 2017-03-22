@@ -21,7 +21,8 @@ class CardList(Gtk.ScrolledWindow):
         # 7 Printings (Sets with this card in it)
         # 8 Mana Cost(Form: {G}{2})
         # 9 CMC
-        self.store = Gtk.ListStore(int, str, str, str, str, str, str, str, GdkPixbuf.Pixbuf, int)
+        # 10 Edition
+        self.store = Gtk.ListStore(int, str, str, str, str, str, str, str, GdkPixbuf.Pixbuf, int, str)
         self.list = Gtk.TreeView(self.store)
         self.add(self.list)
 
@@ -72,11 +73,16 @@ class CardList(Gtk.ScrolledWindow):
         col_cmc = Gtk.TreeViewColumn(title="CMC", cell_renderer=text_renderer, text=9)
         col_cmc.set_visible(False)
 
+        col_set_name = Gtk.TreeViewColumn(title="Edition", cell_renderer=text_renderer, text=10)
+        col_set_name.set_expand(False)
+        col_set_name.set_sort_column_id(10)
+
         self.list.append_column(col_id)
         self.list.append_column(col_title)
         self.list.append_column(col_supertypes)
         self.list.append_column(col_types)
         self.list.append_column(col_rarity)
+        self.list.append_column(col_set_name)
         self.list.append_column(col_power)
         self.list.append_column(col_thoughness)
         self.list.append_column(col_printings)

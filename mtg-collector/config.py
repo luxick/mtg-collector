@@ -16,4 +16,4 @@ green_color = Gdk.color_parse('#87ff89')
 red_color = Gdk.color_parse('#ff6d6d')
 
 # When True Search view will list a card multiple times for each set they appear in
-show_from_all_sets = False
+show_from_all_sets = True
