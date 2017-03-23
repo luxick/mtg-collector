@@ -25,7 +25,8 @@ class CardList(Gtk.ScrolledWindow):
         self.store = Gtk.ListStore(int, str, str, str, str, str, str, str, GdkPixbuf.Pixbuf, int, str)
         if with_filter:
             self.filter = self.store.filter_new()
-            self.list = Gtk.TreeView(self.filter)
+            self.filter_and_sort = Gtk.TreeModelSort(self.filter)
+            self.list = Gtk.TreeView(self.filter_and_sort)
         else:
             self.list = Gtk.TreeView(self.store)
         self.add(self.list)
