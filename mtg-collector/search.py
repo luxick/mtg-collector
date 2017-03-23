@@ -283,6 +283,7 @@ class SearchView(Gtk.Grid):
             GObject.idle_add(self.searchEntry.grab_focus, priority=GObject.PRIORITY_DEFAULT)
             return
 
+        col_title.set_expand(True)
         # Remove duplicate entries
         if config.show_from_all_sets is False:
             unique_cards = []

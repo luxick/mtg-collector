@@ -23,11 +23,14 @@ class CardList(Gtk.ScrolledWindow):
         # 9 CMC
         # 10 Edition
         self.store = Gtk.ListStore(int, str, str, str, str, str, str, str, GdkPixbuf.Pixbuf, int, str)
-        self.list = Gtk.TreeView(self.store)
+        self.filter = self.store.filter_new()
+        self.list = Gtk.TreeView(self.filter)
         self.add(self.list)
 
         self.list.set_rules_hint(True)
         self.selection = self.list.get_selection()
+
+
 
         bold_renderer = Gtk.CellRendererText(xalign=0.5, yalign=0.5)
         bold_renderer.set_property("weight", 800)
@@ -41,10 +44,10 @@ class CardList(Gtk.ScrolledWindow):
 
         col_title = Gtk.TreeViewColumn(title="Name", cell_renderer=bold_renderer, text=1)
         col_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        col_title.set_expand(True)
+        # col_title.set_expand(True)
         col_title.set_sort_column_id(1)
 
-        col_supertypes = Gtk.TreeViewColumn(title="Superypes", cell_renderer=text_renderer, text=2)
+        col_supertypes = Gtk.TreeViewColumn(title="Supertypes", cell_renderer=text_renderer, text=2)
         col_supertypes.set_sort_column_id(2)
         col_supertypes.set_visible(False)
 
@@ -55,19 +58,24 @@ class CardList(Gtk.ScrolledWindow):
         col_rarity.set_sort_column_id(4)
 
         col_power = Gtk.TreeViewColumn(title="Power", cell_renderer=text_renderer, text=5)
-        col_power.set_expand(False)
+        col_power.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
+        col_power.set_fixed_width(50)
         col_power.set_sort_column_id(5)
+        col_power.set_visible(False)
 
         col_thoughness = Gtk.TreeViewColumn(title="Toughness", cell_renderer=text_renderer, text=6)
-        col_thoughness.set_expand(False)
+        col_thoughness.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
+        col_thoughness.set_fixed_width(50)
         col_thoughness.set_sort_column_id(6)
+        col_thoughness.set_visible(False)
 
         col_printings = Gtk.TreeViewColumn(title="Printings", cell_renderer=text_renderer, text=7)
         col_printings.set_sort_column_id(7)
         col_printings.set_visible(False)
 
         col_mana = Gtk.TreeViewColumn(title="Mana Cost", cell_renderer=image_renderer, pixbuf=8)
-        col_mana.set_sizing(Gtk.TreeViewColumnSizing.FIXED)
+        col_mana.set_expand(False)
+        col_mana.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
         col_mana.set_sort_column_id(9)
 
         col_cmc = Gtk.TreeViewColumn(title="CMC", cell_renderer=text_renderer, text=9)

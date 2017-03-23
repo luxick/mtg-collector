@@ -13,28 +13,17 @@ class LibraryView(Gtk.Grid):
         self.set_column_spacing(5)
         self.current_card = None
 
-        # region Demo left bar
-        # Search Box
-        self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
-        self.searchEntry = Gtk.Entry()
-        self.searchEntryLabel = Gtk.Label("Search in Collection:", xalign=0)
-        self.searchbox.add(self.searchEntryLabel)
-        self.searchbox.add(self.searchEntry)
+        # region Tag Bar
 
-        # Filters
-        self.filterBox = Gtk.ListBox()
-        self.filterBox.set_selection_mode(Gtk.SelectionMode.NONE)
+        tag_bar = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        tag_label = Gtk.Label("Organize Tags here")
+        tag_bar.pack_start(tag_label, True, True, 0)
 
-        self.testRow = Gtk.ListBoxRow()
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=50)
-        hbox.add(Gtk.Label("Filters will go here", xalign=0))
-        self.testRow.add(hbox)
-
-        self.filterBox.add(self.testRow)
         # endregion
 
         self.lib_list = cardlist.CardList()
         self.lib_list.selection.connect("changed", self.on_card_selected)
+        self.lib_list.filter.set_visible_func(self.lib_filter_func)
 
         # Detailed Card View
         self.details = details.DetailBar()
@@ -44,9 +33,28 @@ class LibraryView(Gtk.Grid):
         self.remove_button.set_no_show_all(True)
         self.remove_button.connect("clicked", self.remove_button_clicked)
 
-        left_pane = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        left_pane.pack_start(self.searchbox, False, False, 0)
-        left_pane.pack_start(self.filterBox, False, False, 0)
+        # region Top bar
+
+        topbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, margin_top=2, margin_bottom=2)
+        search_label = Gtk.Label()
+        search_label.set_markup("<big>Search</big>")
+
+        search_completer = Gtk.EntryCompletion()
+        search_completer.set_model(self.lib_list.store)
+        search_completer.set_text_column(1)
+
+        self.search_entry = Gtk.Entry()
+        self.search_entry.set_completion(search_completer)
+        self.search_entry.connect("activate", self.search_activated)
+
+        self.refresh_button = Gtk.Button("Refresh")
+        self.refresh_button.set_image(Gtk.Image.new_from_icon_name(Gtk.STOCK_REFRESH, 0))
+
+        topbox.pack_start(search_label, False, False, 2)
+        topbox.pack_start(self.search_entry, False, False, 2)
+        topbox.pack_start(self.refresh_button, False, False, 2)
+
+        # endregion
 
         right_pane = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         right_pane.pack_start(self.details, True, True, 0)
@@ -54,17 +62,31 @@ class LibraryView(Gtk.Grid):
         right_pane.pack_start(self.remove_button, False, False, 2)
 
         # Bring it all together
-        self.attach(left_pane, 0, 0, 1, 1)
 
-        self.attach(Gtk.VSeparator(), 1, 0, 1, 1)
+        self.attach(topbox, 0, 0, 3, 1)
 
-        self.attach(self.lib_list, 2, 0, 1, 1)
+        self.attach(Gtk.VSeparator(), 0, 1, 3, 1)
 
-        self.attach(Gtk.VSeparator(), 3, 0, 1, 1)
+        self.attach(tag_bar, 0, 2, 1, 1)
 
-        self.attach(right_pane, 4, 0, 1, 1)
+        self.attach(Gtk.VSeparator(), 1, 2, 1, 1)
+
+        self.attach(self.lib_list, 2, 2, 1, 1)
+
+        self.attach(Gtk.VSeparator(), 3, 0, 1, 3)
+
+        self.attach(right_pane, 4, 0, 1, 3)
 
         self.fill_lib_list()
+
+    def lib_filter_func(self, model, iter, data):
+        if self.search_entry.get_text() is None or self.search_entry.get_text() == "":
+            return True
+        else:
+            return self.lib_list.store[iter][1] == self.search_entry.get_text()
+
+    def search_activated(self, entry):
+        self.lib_list.filter.refilter()
 
     def on_card_selected(self, selection):
         (model, pathlist) = selection.get_selected_rows()
