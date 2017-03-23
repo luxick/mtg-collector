@@ -21,7 +21,7 @@ class LibraryView(Gtk.Grid):
 
         # endregion
 
-        self.lib_list = cardlist.CardList()
+        self.lib_list = cardlist.CardList(True)
         self.lib_list.selection.connect("changed", self.on_card_selected)
         self.lib_list.filter.set_visible_func(self.lib_filter_func)
 
@@ -49,6 +49,7 @@ class LibraryView(Gtk.Grid):
 
         self.refresh_button = Gtk.Button("Refresh")
         self.refresh_button.set_image(Gtk.Image.new_from_icon_name(Gtk.STOCK_REFRESH, 0))
+        self.refresh_button.connect("clicked", self.refresh_library)
 
         topbox.pack_start(search_label, False, False, 2)
         topbox.pack_start(self.search_entry, False, False, 2)
@@ -79,11 +80,16 @@ class LibraryView(Gtk.Grid):
 
         self.fill_lib_list()
 
+    def refresh_library(self, button):
+        self.fill_lib_list()
+        self.search_entry.set_text("")
+        self.search_entry.activate()
+
     def lib_filter_func(self, model, iter, data):
         if self.search_entry.get_text() is None or self.search_entry.get_text() == "":
             return True
         else:
-            return self.lib_list.store[iter][1] == self.search_entry.get_text()
+            return self.search_entry.get_text().lower() in self.lib_list.store[iter][1].lower()
 
     def search_activated(self, entry):
         self.lib_list.filter.refilter()

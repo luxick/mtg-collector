@@ -4,7 +4,7 @@ from gi.repository import Gtk, GdkPixbuf, Pango
 
 
 class CardList(Gtk.ScrolledWindow):
-    def __init__(self):
+    def __init__(self, with_filter):
         Gtk.ScrolledWindow.__init__(self)
         self.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         self.set_hexpand(True)
@@ -23,8 +23,11 @@ class CardList(Gtk.ScrolledWindow):
         # 9 CMC
         # 10 Edition
         self.store = Gtk.ListStore(int, str, str, str, str, str, str, str, GdkPixbuf.Pixbuf, int, str)
-        self.filter = self.store.filter_new()
-        self.list = Gtk.TreeView(self.filter)
+        if with_filter:
+            self.filter = self.store.filter_new()
+            self.list = Gtk.TreeView(self.filter)
+        else:
+            self.list = Gtk.TreeView(self.store)
         self.add(self.list)
 
         self.list.set_rules_hint(True)

@@ -145,7 +145,7 @@ class SearchView(Gtk.Grid):
         self._do_init_filter_controls()
 
         # Card List
-        self.search_results = cardlist.CardList()
+        self.search_results = cardlist.CardList(False)
         self.search_results.selection.connect("changed", self.on_card_selected)
 
         # Detail View for selected Card
@@ -283,7 +283,6 @@ class SearchView(Gtk.Grid):
             GObject.idle_add(self.searchEntry.grab_focus, priority=GObject.PRIORITY_DEFAULT)
             return
 
-        col_title.set_expand(True)
         # Remove duplicate entries
         if config.show_from_all_sets is False:
             unique_cards = []
