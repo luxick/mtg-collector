@@ -1,4 +1,6 @@
 import gi
+import util
+
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, Pango
 
@@ -26,8 +28,10 @@ class CardList(Gtk.ScrolledWindow):
         if with_filter:
             self.filter = self.store.filter_new()
             self.filter_and_sort = Gtk.TreeModelSort(self.filter)
+            self.filter_and_sort.set_sort_func(4, self.compare_rarity, None)
             self.list = Gtk.TreeView(self.filter_and_sort)
         else:
+            self.store.set_sort_func(4, self.compare_rarity, None)
             self.list = Gtk.TreeView(self.store)
         self.add(self.list)
 
@@ -100,5 +104,17 @@ class CardList(Gtk.ScrolledWindow):
         self.list.append_column(col_printings)
         self.list.append_column(col_mana)
         self.list.append_column(col_cmc)
+
+    def compare_rarity(self, model, row1, row2, user_data):
+        # Column for rarity
+        sort_column = 4
+        value1 = model.get_value(row1, sort_column)
+        value2 = model.get_value(row2, sort_column)
+        if util.rarity_dict[value1.lower()] < util.rarity_dict[value2.lower()]:
+            return -1
+        elif value1 == value2:
+            return 0
+        else:
+            return 1
 
 

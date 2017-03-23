@@ -25,6 +25,14 @@ status_bar = None
 
 unsaved_changes = False
 
+rarity_dict = {
+    "special": 0,
+    "common": 1,
+    "uncommon": 2,
+    "rare": 3,
+    "mythic rare": 4
+        }
+
 # region File Access
 
 
