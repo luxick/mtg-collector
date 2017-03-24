@@ -47,6 +47,9 @@ class MainWindow(Gtk.Window):
         self.search_add = Gtk.MenuItem("Add card")
         self.search_add.connect("activate", self.mb_search_add_card)
         self.search_add.set_sensitive(False)
+        self.search_show_all = Gtk.CheckMenuItem("Show from all Sets")
+        self.search_show_all.connect("toggled", self.mb_search_show_all)
+        self.search_show_all.set_active(config.show_from_all_sets)
 
         self.lib_save = Gtk.ImageMenuItem("Save", Gtk.Image.new_from_icon_name(Gtk.STOCK_SAVE, 0))
         self.lib_save.connect("activate", self.mb_save_lib)
@@ -57,6 +60,7 @@ class MainWindow(Gtk.Window):
         mb_main.append(self.menu_quit)
 
         mb_search.append(self.search_add)
+        mb_search.append(self.search_show_all)
 
         mb_lib.append(self.lib_save)
 
@@ -119,6 +123,9 @@ class MainWindow(Gtk.Window):
 
     def mb_search_add_card(self, menu_item):
         self.search.on_add_delete(self.search.add_delete_button)
+
+    def mb_search_show_all(self, menu_item):
+        config.show_from_all_sets = menu_item.get_active()
 
     def mb_save_lib(self, menu_item):
         util.save_library()
