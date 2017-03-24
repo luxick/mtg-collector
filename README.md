@@ -7,7 +7,7 @@ A desktop application for building and organizing MTG card libraries and decks.
 * Create a library of owned cards
 * Import and Export Libraries
 
-## Roadmap
+## TODO
 
 * Organize cards in library
 * Build decklists from cards in collection

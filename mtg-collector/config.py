@@ -5,7 +5,7 @@ gi.require_version('Gdk', '3.0')
 from gi.repository import Gdk
 
 # Title of the Program Window
-application_title = "MTG Collector (working title) v0.1"
+application_title = "MTG Collector (working title) v0.5"
 
 # Path of image cache
 cache_path= os.path.dirname(__file__) + "/.cache/"
