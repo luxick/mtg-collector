@@ -52,7 +52,7 @@ class CardList(Gtk.ScrolledWindow):
 
         col_title = Gtk.TreeViewColumn(title="Name", cell_renderer=bold_renderer, text=1)
         col_title.set_sizing(Gtk.TreeViewColumnSizing.AUTOSIZE)
-        # col_title.set_expand(True)
+        col_title.set_expand(True)
         col_title.set_sort_column_id(1)
 
         col_supertypes = Gtk.TreeViewColumn(title="Supertypes", cell_renderer=text_renderer, text=2)

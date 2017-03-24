@@ -188,6 +188,7 @@ class SearchView(Gtk.Grid):
             print(self.current_card.name + " removed to library")
         else:
             util.add_card_to_lib(self.current_card)
+            util.window.search_add.set_sensitive(False)
             print(self.current_card.name + " added to library")
         self._do_update_add_button()
 
@@ -233,6 +234,7 @@ class SearchView(Gtk.Grid):
 
                 self.add_delete_button.set_visible(True)
                 self._do_update_add_button()
+                util.window.search_add.set_sensitive(True)
 
     # endregion
 
@@ -325,14 +327,13 @@ class SearchView(Gtk.Grid):
             # update progress bar
             progress += loadprogress_step
             GObject.idle_add(self.progressbar.set_fraction, progress, priorty=GObject.PRIORITY_DEFAULT)
-        print("")
-        # Reload image cache to include new cards
-        util.reload_image_cache()
         # Reactivate search controls
         GObject.idle_add(self._do_activate_controls, True, priority=GObject.PRIORITY_DEFAULT)
         GObject.idle_add(util.push_status, "", priorty=GObject.PRIORITY_DEFAULT)
         # Hide Progress bar
         GObject.idle_add(self.progressbar.set_visible, False, priorty=GObject.PRIORITY_DEFAULT)
+        # Focus first element in List
+        GObject.idle_add(self.search_results.list.grab_focus, priority=GObject.PRIORITY_DEFAULT)
 
     # endregion
 

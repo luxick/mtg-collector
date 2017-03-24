@@ -34,6 +34,7 @@ class MainWindow(Gtk.Window):
         # region Menu Bar
 
         mb_main = Gtk.Menu()
+        mb_search = Gtk.Menu()
         mb_lib = Gtk.Menu()
 
         self.menu_import = Gtk.MenuItem("Import Library")
@@ -43,6 +44,10 @@ class MainWindow(Gtk.Window):
         self.menu_quit = Gtk.ImageMenuItem('Quit', Gtk.Image.new_from_icon_name(Gtk.STOCK_QUIT, 0))
         self.menu_quit.connect("activate", Gtk.main_quit)
 
+        self.search_add = Gtk.MenuItem("Add card")
+        self.search_add.connect("activate", self.mb_search_add_card)
+        self.search_add.set_sensitive(False)
+
         self.lib_save = Gtk.ImageMenuItem("Save", Gtk.Image.new_from_icon_name(Gtk.STOCK_SAVE, 0))
         self.lib_save.connect("activate", self.mb_save_lib)
 
@@ -51,16 +56,22 @@ class MainWindow(Gtk.Window):
         mb_main.append(Gtk.SeparatorMenuItem())
         mb_main.append(self.menu_quit)
 
+        mb_search.append(self.search_add)
+
         mb_lib.append(self.lib_save)
 
         root_menu_main = Gtk.MenuItem("Main")
         root_menu_main.set_submenu(mb_main)
+
+        root_menu_search = Gtk.MenuItem("Search")
+        root_menu_search.set_submenu(mb_search)
 
         root_menu_lib = Gtk.MenuItem("Library")
         root_menu_lib.set_submenu(mb_lib)
 
         mb = Gtk.MenuBar()
         mb.append(root_menu_main)
+        mb.append(root_menu_search)
         mb.append(root_menu_lib)
 
         # endregion
@@ -73,6 +84,8 @@ class MainWindow(Gtk.Window):
         self.menu_quit.add_accelerator("activate", accelgrp, key, mod, Gtk.AccelFlags.VISIBLE)
         key, mod = Gtk.accelerator_parse("<Control>S")
         self.lib_save.add_accelerator("activate", accelgrp, key, mod, Gtk.AccelFlags.VISIBLE)
+        key, mod = Gtk.accelerator_parse("<Control>A")
+        self.search_add.add_accelerator("activate", accelgrp, key, mod, Gtk.AccelFlags.VISIBLE)
 
         self.add_accel_group(accelgrp)
 
@@ -86,8 +99,7 @@ class MainWindow(Gtk.Window):
         self.library = library.LibraryView()
         # self.library.add(library.LibraryView())
 
-        self.search = Gtk.Box()
-        self.search.add(search.SearchView())
+        self.search = search.SearchView()
 
         self.decks = Gtk.Box()
         self.decks.add(Gtk.Label("View and organize your Decklists!"))
@@ -104,6 +116,9 @@ class MainWindow(Gtk.Window):
     def mb_import_lib(self, menu_item):
         util.import_library()
         self.library.fill_lib_list()
+
+    def mb_search_add_card(self, menu_item):
+        self.search.on_add_delete(self.search.add_delete_button)
 
     def mb_save_lib(self, menu_item):
         util.save_library()
