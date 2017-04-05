@@ -1,3 +1,5 @@
+import threading
+
 import config
 import util
 import details
@@ -78,12 +80,16 @@ class LibraryView(Gtk.Grid):
 
         self.attach(right_pane, 4, 0, 1, 3)
 
-        self.fill_lib_list()
+        self.refresh_library(self.refresh_button)
 
     def refresh_library(self, button):
-        self.fill_lib_list()
         self.search_entry.set_text("")
         self.search_entry.activate()
+
+        self.fill_lib_list()
+        # load_thread = threading.Thread(target=self.fill_lib_list)
+        # load_thread.setDaemon(True)
+        # load_thread.start()
 
     def lib_filter_func(self, model, iter, data):
         if self.search_entry.get_text() is None or self.search_entry.get_text() == "":
@@ -110,26 +116,10 @@ class LibraryView(Gtk.Grid):
                 self.remove_button.set_visible(True)
 
     def fill_lib_list(self):
-        self.lib_list.store.clear()
+        self.lib_list.update(util.library)
         self.details.reset()
         self.current_card = None
         self.remove_button.set_visible(False)
-
-        for id, card in util.library.items():
-            if card.supertypes is None:
-                card.supertypes = ""
-            self.lib_list.store.append([
-                id,
-                card.name,
-                " ".join(card.supertypes),
-                " ".join(card.types),
-                card.rarity,
-                card.power,
-                card.toughness,
-                ", ".join(card.printings),
-                util.create_mana_icons(card.mana_cost),
-                card.cmc,
-                card.set_name])
 
     def card_clicked(self, flowbox, flowboxchild):
         card_id = self.flowbox_ids[flowboxchild.get_index()]

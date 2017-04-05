@@ -17,6 +17,7 @@ class SearchView(Gtk.Grid):
         Gtk.Grid.__init__(self)
         self.set_column_spacing(5)
         self.current_card = None
+        self.card_lib = {}
 
         # region Search Box
         self.searchbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5,
@@ -225,8 +226,8 @@ class SearchView(Gtk.Grid):
             card_id = model.get_value(iter, 0)
 
             selected_card = None
-            for card in self.cards:
-                if card.multiverse_id == card_id:
+            for id, card in self.card_lib.items():
+                if id == card_id:
                     selected_card = card
             if selected_card is not None:
                 self.details.set_card_detail(selected_card)
@@ -245,6 +246,7 @@ class SearchView(Gtk.Grid):
         term = self.searchEntry.get_text()
         # Lock down search controls
         GObject.idle_add(self._do_activate_controls, False, priorty=GObject.PRIORITY_DEFAULT)
+
         # Get filter rules
         colorlist = self._get_color_filter()
         tree_iter = self.rarity_combo.get_active_iter()
@@ -263,7 +265,7 @@ class SearchView(Gtk.Grid):
         print("\nStart online search")
         GObject.idle_add(util.push_status, "Searching for cards", priorty=GObject.PRIORITY_DEFAULT)
         try:
-            self.cards = Card.where(name=term) \
+            cards = Card.where(name=term) \
                 .where(colorIdentity=",".join(colorlist)) \
                 .where(types=typefilter) \
                 .where(set=set_filter) \
@@ -276,8 +278,8 @@ class SearchView(Gtk.Grid):
             GObject.idle_add(self._do_activate_controls, True, priorty=GObject.PRIORITY_DEFAULT)
             return
 
-        print("Done. Found " + str(len(self.cards)) + " cards")
-        if len(self.cards) == 0:
+        print("Done. Found " + str(len(cards)) + " cards")
+        if len(cards) == 0:
             messagetext = "No cards with name \"" + term + "\" found"
             GObject.idle_add(util.show_message, "No Results", messagetext, priority=GObject.PRIORITY_DEFAULT)
             # Reactivate search controls
@@ -287,46 +289,17 @@ class SearchView(Gtk.Grid):
 
         # Remove duplicate entries
         if config.show_from_all_sets is False:
-            unique_cards = []
-            unique_names = []
-            # Reverse cardlist so we get the version with the most modern art
-            for card in reversed(self.cards):
-                if card.name not in unique_names:
-                    unique_names.append(card.name)
-                    unique_cards.append(card)
-            duplicatecounter = len(self.cards) - len(unique_cards)
-            self.cards.clear()
-            for unique_card in reversed(unique_cards):
-                self.cards.append(unique_card)
+            cards = self.remove_duplicates(cards)
 
-            # Show count of removed duplicates
-            print("Removed " + str(duplicatecounter) + " duplicate entries")
-
-        loadprogress_step = 1 / len(self.cards)
-        progress = 0.0
         GObject.idle_add(self.progressbar.set_visible, True, priorty=GObject.PRIORITY_DEFAULT)
-        GObject.idle_add(self.progressbar.set_fraction, 0.0, priorty=GObject.PRIORITY_DEFAULT)
         GObject.idle_add(util.push_status, "Loading cards...", priorty=GObject.PRIORITY_DEFAULT)
 
-        for card in self.cards:
-            if card.multiverse_id is not None:
-                if card.supertypes is None:
-                    card.supertypes = ""
-                self.search_results.store.append([
-                    card.multiverse_id,
-                    card.name,
-                    " ".join(card.supertypes),
-                    " ".join(card.types),
-                    card.rarity,
-                    card.power,
-                    card.toughness,
-                    ", ".join(card.printings),
-                    util.create_mana_icons(card.mana_cost),
-                    card.cmc,
-                    card.set_name])
-            # update progress bar
-            progress += loadprogress_step
-            GObject.idle_add(self.progressbar.set_fraction, progress, priorty=GObject.PRIORITY_DEFAULT)
+        # Add search results to list
+        self.card_lib.clear()
+        for card in cards:
+            self.card_lib[card.multiverse_id] = card
+        self.search_results.update(self.card_lib, self.progressbar)
+
         # Reactivate search controls
         GObject.idle_add(self._do_activate_controls, True, priority=GObject.PRIORITY_DEFAULT)
         GObject.idle_add(util.push_status, "", priorty=GObject.PRIORITY_DEFAULT)
@@ -338,6 +311,20 @@ class SearchView(Gtk.Grid):
     # endregion
 
     # region Private Functions
+
+    def remove_duplicates(self, cards):
+        unique_cards = []
+        unique_names = []
+        # Reverse cardlist so we get the version with the most modern art
+        for card in reversed(cards):
+            if card.name not in unique_names:
+                unique_names.append(card.name)
+                unique_cards.append(card)
+        counter = len(cards) - len(unique_cards)
+
+        # Show count of removed duplicates
+        print("Removed " + str(counter) + " duplicate entries")
+        return unique_cards
 
     def _do_update_add_button(self):
         if not util.library.__contains__(self.current_card.multiverse_id):

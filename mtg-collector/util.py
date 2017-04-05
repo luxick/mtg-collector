@@ -1,5 +1,4 @@
 import os
-
 import datetime
 import gi
 import re
@@ -241,9 +240,9 @@ def create_mana_icons(mana_string):
         else:
             image.paste(loaded, (xpos, 0))
         poscounter += 1
-
-    image.save(config.cache_path + "manaicon.png", "PNG")
-    pixbuf = GdkPixbuf.Pixbuf.new_from_file(config.cache_path + "manaicon.png")
+    filename = "icon.png"
+    image.save(config.cache_path + filename)
+    pixbuf = GdkPixbuf.Pixbuf.new_from_file(config.cache_path + filename)
     pixbuf = pixbuf.scale_simple(image.width / 5, image.height / 5, GdkPixbuf.InterpType.HYPER)
-    os.remove(config.cache_path + "manaicon.png")
+    os.remove(config.cache_path + filename)
     return pixbuf

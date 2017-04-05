@@ -105,6 +105,33 @@ class CardList(Gtk.ScrolledWindow):
         self.list.append_column(col_mana)
         self.list.append_column(col_cmc)
 
+    def update(self, library, progressbar=None):
+        self.store.clear()
+        progress_step = 1 / len(library)
+        progress = 0.0
+        if progressbar is not None:
+            progressbar.set_fraction(progress)
+        for multiverse_id, card in library.items():
+            if card.multiverse_id is not None:
+                if card.supertypes is None:
+                    card.supertypes = ""
+                self.store.append([
+                    card.multiverse_id,
+                    card.name,
+                    " ".join(card.supertypes),
+                    " ".join(card.types),
+                    card.rarity,
+                    card.power,
+                    card.toughness,
+                    ", ".join(card.printings),
+                    util.create_mana_icons(card.mana_cost),
+                    card.cmc,
+                    card.set_name])
+
+            progress += progress_step
+            if progressbar is not None:
+                progressbar.set_fraction(progress)
+
     def compare_rarity(self, model, row1, row2, user_data):
         # Column for rarity
         sort_column = 4
