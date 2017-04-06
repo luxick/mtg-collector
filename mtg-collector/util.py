@@ -223,7 +223,7 @@ def load_card_image(card, sizex, sizey):
 
 def create_mana_icons(mana_string):
     # Convert the string to a List
-    list = re.findall("\{(.*?)\}", str(mana_string))
+    list = re.findall("{(.*?)}", str(mana_string))
     if len(list) == 0:
         return
     # Compute horizontal size for the final image

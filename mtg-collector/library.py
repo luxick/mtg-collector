@@ -82,14 +82,14 @@ class LibraryView(Gtk.Grid):
 
         self.refresh_library(self.refresh_button)
 
-    def refresh_library(self, button):
+    def reload(self):
+        self.refresh_library()
+
+    def refresh_library(self, button=None):
         self.search_entry.set_text("")
         self.search_entry.activate()
 
         self.fill_lib_list()
-        # load_thread = threading.Thread(target=self.fill_lib_list)
-        # load_thread.setDaemon(True)
-        # load_thread.start()
 
     def lib_filter_func(self, model, iter, data):
         if self.search_entry.get_text() is None or self.search_entry.get_text() == "":

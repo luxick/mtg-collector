@@ -106,9 +106,10 @@ class CardList(Gtk.ScrolledWindow):
         self.list.append_column(col_cmc)
 
     def update(self, library, progressbar=None):
-        self.store.clear()
         progress_step = 1 / len(library)
         progress = 0.0
+
+        self.store.clear()
         if progressbar is not None:
             progressbar.set_fraction(progress)
         for multiverse_id, card in library.items():
@@ -127,7 +128,6 @@ class CardList(Gtk.ScrolledWindow):
                     util.create_mana_icons(card.mana_cost),
                     card.cmc,
                     card.set_name])
-
             progress += progress_step
             if progressbar is not None:
                 progressbar.set_fraction(progress)

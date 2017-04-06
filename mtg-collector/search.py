@@ -241,6 +241,9 @@ class SearchView(Gtk.Grid):
 
     # region Public Functions
 
+    def reload(self):
+        pass
+
     def load_cards(self):
         # Get search term
         term = self.searchEntry.get_text()
