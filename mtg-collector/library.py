@@ -64,6 +64,17 @@ class LibraryView(Gtk.Grid):
         right_pane.pack_start(Gtk.VSeparator(), False, False, 2)
         right_pane.pack_start(self.remove_button, False, False, 2)
 
+        spinner = Gtk.Spinner()
+        spinner.start()
+        label = Gtk.Label("Loading List")
+
+        self.spinner_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.spinner_box.pack_start(spinner, True, False, 0)
+        self.overlay = Gtk.Overlay()
+        self.overlay.add(self.lib_list)
+        self.overlay.add_overlay(self.spinner_box)
+        self.overlay.show_all()
+
         # Bring it all together
 
         self.attach(topbox, 0, 0, 3, 1)
@@ -74,7 +85,7 @@ class LibraryView(Gtk.Grid):
 
         self.attach(Gtk.VSeparator(), 1, 2, 1, 1)
 
-        self.attach(self.lib_list, 2, 2, 1, 1)
+        self.attach(self.overlay, 2, 2, 1, 1)
 
         self.attach(Gtk.VSeparator(), 3, 0, 1, 3)
 
@@ -84,6 +95,7 @@ class LibraryView(Gtk.Grid):
         self.refresh_library()
 
     def refresh_library(self, button=None):
+        util.push_status("Loading Library")
         self.search_entry.activate()
         self.fill_lib_list()
 
@@ -113,7 +125,7 @@ class LibraryView(Gtk.Grid):
 
     def fill_lib_list(self):
         # Fill List in thread
-        load_thread = threading.Thread(target=self.lib_list.update, args=(util.library, ))
+        load_thread = threading.Thread(target=self.lib_list.update, args=(util.library, None, self.spinner_box, ))
         load_thread.setDaemon(True)
         load_thread.start()
 

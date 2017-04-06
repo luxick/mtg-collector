@@ -242,7 +242,7 @@ class SearchView(Gtk.Grid):
     # region Public Functions
 
     def reload(self):
-        pass
+        self.searchEntry.grab_focus()
 
     def load_cards(self):
         # Get search term

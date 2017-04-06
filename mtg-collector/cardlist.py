@@ -105,17 +105,20 @@ class CardList(Gtk.ScrolledWindow):
         self.list.append_column(col_mana)
         self.list.append_column(col_cmc)
 
-    def update(self, library, progressbar=None):
+    def update(self, library, progressbar=None, loading_indicator=None):
         progress_step = 1 / len(library)
         progress = 0.0
+        self.store.clear()
 
         if self.filtered:
             self.list.freeze_child_notify()
             self.list.set_model(None)
 
-        self.store.clear()
         if progressbar is not None:
             progressbar.set_fraction(progress)
+        if loading_indicator is not None:
+            GObject.idle_add(loading_indicator.set_visible, True, priority=GObject.PRIORITY_DEFAULT)
+
         for multiverse_id, card in library.items():
             if card.multiverse_id is not None:
                 if card.supertypes is None:
@@ -134,11 +137,15 @@ class CardList(Gtk.ScrolledWindow):
                     card.set_name]
                 self.store.append(item)
             progress += progress_step
+
             if progressbar is not None:
                 progressbar.set_fraction(progress)
+        if loading_indicator is not None:
+            GObject.idle_add(loading_indicator.set_visible, False, priority=GObject.PRIORITY_DEFAULT)
         if self.filtered:
-            self.list.set_model(self.store)
+            self.list.set_model(self.filter_and_sort)
             self.list.thaw_child_notify()
+        GObject.idle_add(util.push_status, "Library ready.", priority=GObject.PRIORITY_DEFAULT)
 
     def update_generate(self, library, step=128):
         n = 0

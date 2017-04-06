@@ -70,7 +70,7 @@ def import_library():
             library.clear()
             for id, card in imported.items():
                 library[id] = card
-            unsaved_changes = True
+            save_library()
             push_status("Library imported")
             print("Library imported")
     dialog.destroy()
@@ -243,7 +243,6 @@ def create_mana_icons(mana_string):
         pixbuf = GdkPixbuf.Pixbuf.new_from_file(path)
         pixbuf = pixbuf.scale_simple(image.width / 5, image.height / 5, GdkPixbuf.InterpType.HYPER)
     except:
-        print("Error while loading file " + path)
         return
-    # os.remove(config.cache_path + filename)
+    # os.remove(path)
     return pixbuf
