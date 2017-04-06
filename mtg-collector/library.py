@@ -6,7 +6,7 @@ import details
 import cardlist
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GdkPixbuf
+from gi.repository import Gtk, GdkPixbuf, GObject
 
 
 class LibraryView(Gtk.Grid):
@@ -80,15 +80,11 @@ class LibraryView(Gtk.Grid):
 
         self.attach(right_pane, 4, 0, 1, 3)
 
-        self.refresh_library(self.refresh_button)
-
     def reload(self):
         self.refresh_library()
 
     def refresh_library(self, button=None):
-        self.search_entry.set_text("")
         self.search_entry.activate()
-
         self.fill_lib_list()
 
     def lib_filter_func(self, model, iter, data):
@@ -116,7 +112,15 @@ class LibraryView(Gtk.Grid):
                 self.remove_button.set_visible(True)
 
     def fill_lib_list(self):
-        self.lib_list.update(util.library)
+        # Fill List in thread
+        load_thread = threading.Thread(target=self.lib_list.update, args=(util.library, ))
+        load_thread.setDaemon(True)
+        load_thread.start()
+
+        # Fill list during idle cycles
+        # loader = self.lib_list.update_generate(util.library)
+        # GObject.idle_add(loader.__next__)
+
         self.details.reset()
         self.current_card = None
         self.remove_button.set_visible(False)

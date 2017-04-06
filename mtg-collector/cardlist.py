@@ -2,7 +2,7 @@ import gi
 import util
 
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GdkPixbuf, Pango
+from gi.repository import Gtk, GdkPixbuf, GObject
 
 
 class CardList(Gtk.ScrolledWindow):
@@ -11,6 +11,8 @@ class CardList(Gtk.ScrolledWindow):
         self.set_policy(Gtk.PolicyType.NEVER, Gtk.PolicyType.AUTOMATIC)
         self.set_hexpand(True)
         self.set_vexpand(True)
+
+        self.filtered = with_filter
 
         # Columns are these:
         # 0 Multiverse ID
@@ -25,7 +27,7 @@ class CardList(Gtk.ScrolledWindow):
         # 9 CMC
         # 10 Edition
         self.store = Gtk.ListStore(int, str, str, str, str, str, str, str, GdkPixbuf.Pixbuf, int, str)
-        if with_filter:
+        if self.filtered:
             self.filter = self.store.filter_new()
             self.filter_and_sort = Gtk.TreeModelSort(self.filter)
             self.filter_and_sort.set_sort_func(4, self.compare_rarity, None)
@@ -37,8 +39,6 @@ class CardList(Gtk.ScrolledWindow):
 
         self.list.set_rules_hint(True)
         self.selection = self.list.get_selection()
-
-
 
         bold_renderer = Gtk.CellRendererText(xalign=0.5, yalign=0.5)
         bold_renderer.set_property("weight", 800)
@@ -109,6 +109,10 @@ class CardList(Gtk.ScrolledWindow):
         progress_step = 1 / len(library)
         progress = 0.0
 
+        if self.filtered:
+            self.list.freeze_child_notify()
+            self.list.set_model(None)
+
         self.store.clear()
         if progressbar is not None:
             progressbar.set_fraction(progress)
@@ -116,7 +120,7 @@ class CardList(Gtk.ScrolledWindow):
             if card.multiverse_id is not None:
                 if card.supertypes is None:
                     card.supertypes = ""
-                self.store.append([
+                item =[
                     card.multiverse_id,
                     card.name,
                     " ".join(card.supertypes),
@@ -127,10 +131,46 @@ class CardList(Gtk.ScrolledWindow):
                     ", ".join(card.printings),
                     util.create_mana_icons(card.mana_cost),
                     card.cmc,
-                    card.set_name])
+                    card.set_name]
+                self.store.append(item)
             progress += progress_step
             if progressbar is not None:
                 progressbar.set_fraction(progress)
+        if self.filtered:
+            self.list.set_model(self.store)
+            self.list.thaw_child_notify()
+
+    def update_generate(self, library, step=128):
+        n = 0
+        self.store.clear()
+        self.list.freeze_child_notify()
+        for multiverse_id, card in library.items():
+            if card.multiverse_id is not None:
+                if card.supertypes is None:
+                    card.supertypes = ""
+                item =[
+                    card.multiverse_id,
+                    card.name,
+                    " ".join(card.supertypes),
+                    " ".join(card.types),
+                    card.rarity,
+                    card.power,
+                    card.toughness,
+                    ", ".join(card.printings),
+                    util.create_mana_icons(card.mana_cost),
+                    card.cmc,
+                    card.set_name]
+                self.store.append(item)
+
+                n += 1
+                if (n % step) == 0:
+                    self.list.thaw_child_notify()
+                    yield True
+                    self.list.freeze_child_notify()
+
+        self.list.thaw_child_notify()
+        # stop idle_add()
+        yield False
 
     def compare_rarity(self, model, row1, row2, user_data):
         # Column for rarity

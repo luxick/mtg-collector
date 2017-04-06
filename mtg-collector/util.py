@@ -21,6 +21,7 @@ library = {}
 
 window = None
 status_bar = None
+current_view = None
 
 unsaved_changes = False
 
@@ -65,16 +66,11 @@ def import_library():
                                                  "Importing a library will override your current library. "
                                                  "Proceed?")
         if override_question == Gtk.ResponseType.YES:
-            imported = None
-            # try:
             imported = pickle.load(open(dialog.get_filename(), 'rb'))
-            # except:
-
             library.clear()
             for id, card in imported.items():
                 library[id] = card
-            save_library()
-
+            unsaved_changes = True
             push_status("Library imported")
             print("Library imported")
     dialog.destroy()
@@ -109,7 +105,7 @@ def load_library():
             show_message("Error", "Error while loading library from disk")
     else:
         save_library()
-        print("No library file found on disk, created new one")
+        print("No library file found, created new one")
 
 
 def load_sets():
@@ -241,8 +237,13 @@ def create_mana_icons(mana_string):
             image.paste(loaded, (xpos, 0))
         poscounter += 1
     filename = "icon.png"
-    image.save(config.cache_path + filename)
-    pixbuf = GdkPixbuf.Pixbuf.new_from_file(config.cache_path + filename)
-    pixbuf = pixbuf.scale_simple(image.width / 5, image.height / 5, GdkPixbuf.InterpType.HYPER)
-    os.remove(config.cache_path + filename)
+    path = config.cache_path + filename
+    image.save(path)
+    try:
+        pixbuf = GdkPixbuf.Pixbuf.new_from_file(path)
+        pixbuf = pixbuf.scale_simple(image.width / 5, image.height / 5, GdkPixbuf.InterpType.HYPER)
+    except:
+        print("Error while loading file " + path)
+        return
+    # os.remove(config.cache_path + filename)
     return pixbuf

@@ -110,13 +110,9 @@ class MainWindow(Gtk.Window):
 
         # endregion
 
-        self.library = library.LibraryView()
-
-        self.search = search.SearchView()
-
-        self.view_dict = {
-            "library": self.library,
-            "search": self.search
+        self.views = {
+            "library": library.LibraryView(),
+            "search": search.SearchView()
         }
 
         self.view_buttons = {
@@ -124,7 +120,7 @@ class MainWindow(Gtk.Window):
             "search": self.view_search
         }
 
-        self.view = self.view_dict[config.start_view]
+        self.view = self.views[config.start_view]
         self.view_buttons[config.start_view].set_sensitive(False)
 
         self.view_container = Gtk.Box()
@@ -146,7 +142,7 @@ class MainWindow(Gtk.Window):
         self.view_container.show_all()
 
     def mb_view_switch(self, menu_item):
-        new_view = self.view_dict[menu_item.get_name()]
+        new_view = self.views[menu_item.get_name()]
         self.switch_view(new_view)
         for item in self.view_buttons.values():
             item.set_sensitive(True)
@@ -157,9 +153,9 @@ class MainWindow(Gtk.Window):
     def mb_export_lib(menu_item):
         util.export_library()
 
-    @staticmethod
-    def mb_import_lib(menu_item):
+    def mb_import_lib(self, menu_item):
         util.import_library()
+        self.view.reload()
 
     def mb_search_add_card(self, menu_item):
         self.search.on_add_delete(self.search.add_delete_button)
